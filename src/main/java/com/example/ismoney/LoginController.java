@@ -6,21 +6,18 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
 
-public class HelloController {
+public class LoginController {
 
-    @FXML private TextField usernameField;
     @FXML private TextField emailField;
     @FXML private TextField passwordField;
-    @FXML private TextField confirmPasswordField;
-    @FXML private Button signUpBtn;
+    @FXML private Button loginBtn;
     @FXML private Label errorMessage;
     @FXML private Label successMessage;
 
     @FXML
-    private void onSignup() {
+    private void onLogin() {
         String email = emailField.getText().trim();
         String password = passwordField.getText();
-        String confirm = confirmPasswordField.getText();
 
         if (email.isEmpty()) {
             showError("Email tidak boleh kosong.");
@@ -30,19 +27,16 @@ public class HelloController {
             showError("Kata sandi tidak boleh kosong.");
             return;
         }
-        if (!password.equals(confirm)) {
-            showError("Konfirmasi kata sandi tidak sesuai.");
-            return;
-        }
 
-        User newUser = new User(email, password);
-        boolean success = newUser.signUp();
+        User user = new User(email, password);
+        boolean success = user.checkCredentials();
 
         if (success) {
-            showSuccess("Pendaftaran berhasil!");
-            SceneSwitcher.switchTo("Login.fxml", (Stage) emailField.getScene().getWindow());
+            showSuccess("Login berhasil!");
+            // Setelah login, dapat dialihkan ke Dashboard
+            SceneSwitcher.switchTo("Dashboard.fxml", (Stage) emailField.getScene().getWindow());
         } else {
-            showError("Signup gagal. Email mungkin tersedia.");
+            showError("Email atau kata sandi salah.");
         }
     }
 

@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.effect.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<AnchorPane prefHeight="491.0" prefWidth="756.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.ismoney.LoginController">
+    <children>
+        <Pane fx:id="backgroundPanel" layoutY="-4.0" prefHeight="498.0" prefWidth="780.0" style="-fx-background-color: linear-gradient(from 0% 0% to 100% 0%, #FFFFFF, #63DBF3);">
+            <opaqueInsets>
+                <Insets />
+            </opaqueInsets>
+            <effect>
+                <ColorAdjust />
+            </effect>
+            <children>
+                <VBox alignment="CENTER" layoutX="290.0" layoutY="81.0" prefHeight="337.0" prefWidth="200.0">
+                    <children>
+                        <Label alignment="CENTER" contentDisplay="CENTER" prefHeight="18.0" prefWidth="201.0" style="-fx-font-family: Poppins; -fx-font-weight: Bold; -fx-font-size: 25;" text="IsMoney" textAlignment="CENTER" textFill="#9c008c">
+                            <VBox.margin>
+                                <Insets bottom="10.0" left="5.0" right="5.0" top="5.0" />
+                            </VBox.margin>
+                        </Label>
+                        <TextField fx:id="emailField" prefHeight="30.0" prefWidth="200.0" promptText="Email" style="-fx-background-color: rgba(217, 217, 217, 0.8); -fx-background-radius: 5; -fx-font-family: Poppins">
+                            <font>
+                                <Font name="Segoe UI" size="12.0" />
+                            </font>
+                            <VBox.margin>
+                                <Insets bottom="10.0" left="5.0" right="5.0" top="5.0" />
+                            </VBox.margin>
+                            <padding>
+                                <Insets bottom="4.0" left="10.0" top="4.0" />
+                            </padding>
+                        </TextField>
+                        <TextField fx:id="passwordField" prefHeight="30.0" prefWidth="200.0" promptText="Kata Sandi" style="-fx-background-color: rgba(217, 217, 217, 0.8); -fx-background-radius: 5; -fx-font-family: Poppins">
+                            <font>
+                                <Font name="Segoe UI" size="12.0" />
+                            </font>
+                            <VBox.margin>
+                                <Insets bottom="10.0" left="5.0" right="5.0" top="5.0" />
+                            </VBox.margin>
+                            <padding>
+                                <Insets bottom="4.0" left="10.0" top="4.0" />
+                            </padding>
+                        </TextField>
+                        <Label fx:id="errorMessage" text="" textFill="RED" visible="false" wrapText="true">
+                            <font>
+                                <Font size="12.0" />
+                            </font>
+                        </Label>
+                        <Label fx:id="successMessage" text="" textFill="GREEN" visible="false" wrapText="true">
+                            <font>
+                                <Font size="12.0" />
+                            </font>
+                        </Label>
+                        <Button fx:id="loginBtn" mnemonicParsing="false" prefHeight="35.0" prefWidth="200.0" style="-fx-background-color: rgba(58, 162, 233, 0.7); -fx-font-family: Poppins; -fx-font-weight: Bold; -fx-font-size: 14px; -fx-background-radius: 7;" text="Masuk" textFill="WHITE">
+                            <font>
+                                <Font name="Segoe UI" size="12.0" />
+                            </font>
+                            <VBox.margin>
+                                <Insets bottom="10.0" left="5.0" right="5.0" top="5.0" />
+                            </VBox.margin>
+                        </Button>
+                        <Button fx:id="googleLoginBtn" maxWidth="Infinity" prefHeight="40.0" style="-fx-background-color: #8c0093; -fx-background-radius: 7; -fx-font-family: Poppins; -fx-font-weight: Bold; -fx-font-size: 14px;" text="Masuk Dengan Google" textFill="WHITE">
+                            <font>
+                                <Font size="14.0" />
+                            </font>
+                            <VBox.margin>
+                                <Insets bottom="10.0" left="5.0" right="5.0" top="5.0" />
+                            </VBox.margin>
+                        </Button>
+                        <HBox alignment="CENTER" prefHeight="13.0" prefWidth="156.0">
+                            <children>
+                                <Label prefHeight="16.0" prefWidth="116.0" style="-fx-font-family: Poppins;" text="Belum punya akun?" textFill="#5c5d5e" />
+                                <Label fx:id="signupLabel" style="-fx-font-family: Poppins;" text="Daftar" textFill="#0f76dc" />
+                            </children>
+                            <VBox.margin>
+                                <Insets bottom="10.0" left="5.0" right="5.0" top="5.0" />
+                            </VBox.margin>
+                        </HBox>
+                    </children>
+                </VBox>
+            </children>
+        </Pane>
+    </children>
+</AnchorPane>
