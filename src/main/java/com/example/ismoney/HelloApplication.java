@@ -11,11 +11,11 @@ public class HelloApplication extends Application {
     @Override
     public void start(Stage stage) throws IOException {
         try {
-            FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("/com/example/ismoney/Transaction/TransactionForm.fxml"));
+            FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("/com/example/ismoney/Register.fxml"));
 
-            Scene scene = new Scene(fxmlLoader.load(), 600, 400);
+            Scene scene = new Scene(fxmlLoader.load(), 756, 491);
 
-            stage.setTitle("IsMoney - Tambah Transaksi");
+            stage.setTitle("IsMoney");
             stage.setScene(scene);
             stage.setResizable(false);
             stage.show();
