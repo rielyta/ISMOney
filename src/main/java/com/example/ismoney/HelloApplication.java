@@ -15,11 +15,7 @@ public class HelloApplication extends Application {
 
             Scene scene = new Scene(fxmlLoader.load(), 756, 491);
 
-<<<<<<< HEAD
             stage.setTitle("IsMoney - Register");
-=======
-            stage.setTitle("IsMoney");
->>>>>>> edbf9160d420b1ea7d3db3ac712a29cbb9db723f
             stage.setScene(scene);
             stage.setResizable(false);
             stage.show();
