@@ -1,43 +1,123 @@
 package com.example.ismoney;
 
+import com.example.ismoney.dao.UserDAO;
+import com.example.ismoney.dao.UserDAOImpl;
 import com.example.ismoney.model.user.User;
 import com.example.ismoney.util.SceneSwitcher;
+import com.example.ismoney.util.SessionManager;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
+import java.util.logging.Logger;
 
 public class LoginController {
-
-    @FXML private TextField emailField;
-    @FXML private TextField passwordField;
-    @FXML private Button loginBtn;
-    @FXML private Label errorMessage;
-    @FXML private Label successMessage;
+    private static final Logger logger = Logger.getLogger(LoginController.class.getName());
+    private static final int MAX_LOGIN_ATTEMPTS = 3;
+    private int loginAttempts = 0;
 
     @FXML
-    private void onLogin() {
-        String email = emailField.getText().trim();
-        String password = passwordField.getText();
+    private TextField emailOrUsernameField;
+    @FXML
+    private PasswordField passwordField;
+    @FXML
+    private Label errorMessage;
+    @FXML
+    private Label successMessage;
+    @FXML
+    private Label signupLabel;
+    @FXML
+    private Button loginButton;
+    @FXML
+    private CheckBox rememberMeCheckBox;
 
-        if (email.isEmpty()) {
-            showError("Email tidak boleh kosong.");
-            return;
-        }
-        if (password.isEmpty()) {
-            showError("Kata sandi tidak boleh kosong.");
-            return;
-        }
+    private final UserDAO userDAO = new UserDAOImpl();
 
-        User user = new User(email, password);
-        boolean success = user.checkCredentials();
+    @FXML
+    protected void onLogin() {
+        hideMessages();
+        setButtonState(false);
 
-        if (success) {
-            showSuccess("Login berhasil!");
-            // Setelah login, dapat dialihkan ke Dashboard
-            SceneSwitcher.switchTo("Dashboard.fxml", (Stage) emailField.getScene().getWindow());
-        } else {
-            showError("Email atau kata sandi salah.");
+        try {
+            if (loginAttempts >= MAX_LOGIN_ATTEMPTS) {
+                showError("Terlalu banyak percobaan login. Silakan tunggu beberapa saat.");
+                return;
+            }
+
+            String emailOrUsername = emailOrUsernameField.getText();
+            String password = passwordField.getText();
+
+            if (emailOrUsername == null || emailOrUsername.trim().isEmpty() ||
+                    password == null || password.isEmpty()) {
+                showError("Email/Username dan password wajib diisi.");
+                loginAttempts++;
+                return;
+            }
+
+            User authenticatedUser = userDAO.authenticateUser(emailOrUsername.trim(), password);
+
+            if (authenticatedUser == null) {
+                loginAttempts++;
+                showError("Email/Username atau password salah. Percobaan: " + loginAttempts + "/" + MAX_LOGIN_ATTEMPTS);
+
+                if (loginAttempts >= MAX_LOGIN_ATTEMPTS) {
+                    setButtonState(false);
+                    javafx.concurrent.Task<Void> resetTask = new javafx.concurrent.Task<Void>() {
+                        @Override
+                        protected Void call() throws Exception {
+                            Thread.sleep(30000);
+                            return null;
+                        }
+
+                        @Override
+                        protected void succeeded() {
+                            loginAttempts = 0;
+                            setButtonState(true);
+                        }
+                    };
+                    new Thread(resetTask).start();
+                }
+                return;
+            }
+
+            userDAO.updateLastLogin(authenticatedUser.getId());
+
+            SessionManager.getInstance().setCurrentUser(authenticatedUser);
+            SessionManager.getInstance().setRememberMe(rememberMeCheckBox.isSelected());
+
+            showSuccess("Login berhasil! Mengalihkan ke dashboard...");
+
+            loginAttempts = 0;
+
+            passwordField.clear();
+
+            javafx.concurrent.Task<Void> task = new javafx.concurrent.Task<Void>() {
+                @Override
+                protected Void call() throws Exception {
+                    Thread.sleep(1000);
+                    return null;
+                }
+
+                @Override
+                protected void succeeded() {
+                    SceneSwitcher.switchTo("Dashboard.fxml", (Stage) loginButton.getScene().getWindow());
+                }
+            };
+
+            new Thread(task).start();
+
+        } catch (Exception e) {
+            logger.severe("Error during login: " + e.getMessage());
+            showError("Terjadi kesalahan sistem. Silakan coba lagi.");
+        } finally {
+            if (loginAttempts < MAX_LOGIN_ATTEMPTS) {
+                setButtonState(true);
+            }
         }
+    }
+
+    @FXML
+    private void onSignupClick() {
+        SceneSwitcher.switchTo("Register.fxml", (Stage) signupLabel.getScene().getWindow());
     }
 
     private void showError(String message) {
@@ -50,5 +130,14 @@ public class LoginController {
         successMessage.setText(message);
         successMessage.setVisible(true);
         errorMessage.setVisible(false);
+    }
+
+    private void hideMessages() {
+        errorMessage.setVisible(false);
+        successMessage.setVisible(false);
+    }
+
+    private void setButtonState(boolean enabled) {
+        loginButton.setDisable(!enabled);
     }
 }
