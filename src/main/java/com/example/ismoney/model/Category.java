@@ -30,7 +30,6 @@ public class Category {
         setColor(color);
     }
 
-    // Override toString untuk ComboBox display
     @Override
     public String toString() {
         return getName(); // Untuk ComboBox display

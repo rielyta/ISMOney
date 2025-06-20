@@ -46,7 +46,7 @@ public class savingGoalFormController implements Initializable {
     }
 
     private void setupStatusComboBox() {
-        statusComboBox.getItems().addAll("ACTIVE", "COMPLETED", "PAUSED", "CANCELLED");
+        statusComboBox.getItems().addAll("ACTIVE", "COMPLETED", "PAUSED");
         statusComboBox.setValue("ACTIVE");
     }
 

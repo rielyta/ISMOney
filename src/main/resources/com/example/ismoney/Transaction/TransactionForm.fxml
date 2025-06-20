@@ -21,11 +21,12 @@
          <font>
             <Font size="13.0" />
          </font></Label>
-      <ComboBox fx:id="categoryComboBox" layoutX="215.0" layoutY="167.0" prefWidth="150.0" />
-      <Label layoutX="73.0" layoutY="171.0" text="Category" textFill="WHITE">
+      <Label layoutX="73.0" layoutY="171.0" text="Kategori" textFill="WHITE">
          <font>
             <Font size="13.0" />
-         </font></Label>
+         </font>
+      </Label>
+      <ComboBox fx:id="categoryComboBox" layoutX="215.0" layoutY="167.0" prefWidth="200.0" />
       <DatePicker fx:id="datePicker" layoutX="215.0" layoutY="207.0" />
       <Label layoutX="73.0" layoutY="211.0" text="Tanggal Transaksi" textFill="WHITE">
          <font>

@@ -1,6 +1,5 @@
 package com.example.ismoney.controller;
 
-import com.example.ismoney.dao.CategoryDAO;
 import com.example.ismoney.dao.TransactionDAO;
 import com.example.ismoney.model.Category;
 import com.example.ismoney.model.Transaction;
@@ -8,10 +7,12 @@ import com.example.ismoney.model.TransactionType;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 public class TransactionFormController {
@@ -23,54 +24,100 @@ public class TransactionFormController {
     @FXML private TextArea noteField;
 
     private TransactionDAO transactionDAO;
-    private CategoryDAO categoryDAO;
-    private static final Integer CURRENT_USER_ID = 1; // Nanti ambil dari session
+    private static final Integer CURRENT_USER_ID = 1;
+
+    private List<Category> defaultCategories = new ArrayList<>();
 
     @FXML
     public void initialize() {
         transactionDAO = new TransactionDAO();
-        categoryDAO = new CategoryDAO();
 
         typeComboBox.setItems(FXCollections.observableArrayList("INCOME", "OUTCOME"));
-
         datePicker.setValue(LocalDate.now());
 
-        loadAllCategories();
+        setupCategoryComboBox();
 
         typeComboBox.setOnAction(event -> {
             String selectedType = typeComboBox.getValue();
             if (selectedType != null) {
-                loadCategoriesByType(selectedType);
+                filterCategoriesByType(selectedType);
+            }
+        });
+
+        categoryComboBox.setOnAction(event -> {
+            Category selected = categoryComboBox.getValue();
+            if (selected != null && selected.getCategoriesId() == -1) {
+                String type = typeComboBox.getValue();
+                if (type != null) {
+                    showAddCategoryDialog(type);
+                } else {
+                    showAlert("Pilih Tipe", "Silakan pilih tipe transaksi terlebih dahulu.");
+                }
             }
         });
     }
 
-    private void loadAllCategories() {
-        try {
-            List<Category> categories = categoryDAO.getAllCategories();
-            categoryComboBox.setItems(FXCollections.observableArrayList(categories));
-        } catch (Exception e) {
-            showAlert("Database Error", "Gagal memuat kategori: " + e.getMessage());
-        }
+    private void setupCategoryComboBox() {
+        defaultCategories.clear();
+        defaultCategories.add(new Category(1, "Transportasi", "OUTCOME"));
+        defaultCategories.add(new Category(2, "Belanja Bulanan", "OUTCOME"));
+        defaultCategories.add(new Category(3, "Hiburan", "OUTCOME"));
+        defaultCategories.add(new Category(4, "Gaji", "INCOME"));
+        defaultCategories.add(new Category(5, "Bonus", "INCOME"));
+        defaultCategories.add(new Category(-1, "➕ Tambah Kategori Baru...", ""));
+
+        categoryComboBox.setItems(FXCollections.observableArrayList(defaultCategories));
     }
 
-    private void loadCategoriesByType(String type) {
-        try {
-            List<Category> categories = categoryDAO.getCategoriesByType(type);
-            categoryComboBox.setItems(FXCollections.observableArrayList(categories));
-            categoryComboBox.setValue(null); // Reset selection
-        } catch (Exception e) {
-            showAlert("Database Error", "Gagal memuat kategori: " + e.getMessage());
-        }
+    private void filterCategoriesByType(String selectedType) {
+        List<Category> filtered = defaultCategories.stream()
+                .filter(c -> c.getCategoriesId() == -1 || c.getType().equals(selectedType))
+                .toList();
+        categoryComboBox.setItems(FXCollections.observableArrayList(filtered));
+        categoryComboBox.setValue(null);
+    }
+
+    private void showAddCategoryDialog(String type) {
+        Dialog<Category> dialog = new Dialog<>();
+        dialog.setTitle("Tambah Kategori Baru");
+
+        Label nameLabel = new Label("Nama:");
+        TextField nameField = new TextField();
+
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.add(nameLabel, 0, 0);
+        grid.add(nameField, 1, 0);
+
+        dialog.getDialogPane().setContent(grid);
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+        dialog.setResultConverter(dialogButton -> {
+            if (dialogButton == ButtonType.OK) {
+                String name = nameField.getText().trim();
+                if (name.isEmpty()) {
+                    showAlert("Validasi Gagal", "Nama kategori tidak boleh kosong!");
+                    return null;
+                }
+
+                Category category = new Category(defaultCategories.size() + 100, name, type);
+                defaultCategories.add(defaultCategories.size() - 1, category); // Simpan sebelum "➕"
+                return category;
+            }
+            return null;
+        });
+
+        dialog.showAndWait().ifPresent(newCategory -> {
+            filterCategoriesByType(type);
+            categoryComboBox.setValue(newCategory);
+        });
     }
 
     @FXML
     private void handleSaveTransaction() {
         try {
-            // Validate input
-            if (!validateInput()) {
-                return;
-            }
+            if (!validateInput()) return;
 
             BigDecimal amount = new BigDecimal(amountField.getText().trim());
             String type = typeComboBox.getValue();
