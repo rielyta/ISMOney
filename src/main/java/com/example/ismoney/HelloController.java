@@ -118,7 +118,7 @@ public class HelloController {
         }
 
         if (!ValidationUtils.isStrongPassword(password)) {
-            return "Password harus minimal 8 karakter dengan kombinasi huruf besar, huruf kecil, dan angka.";
+            return "Password harus minimal 8 karakter.";
         }
 
         if (!password.equals(confirmPassword)) {

@@ -28,7 +28,7 @@ public class LoginController {
     @FXML
     private Button loginButton;
     @FXML
-    private CheckBox rememberMeCheckBox;
+    private CheckBox rememberMeCheckBox; // Ini bisa null jika tidak ada di FXML
 
     private final UserDAO userDAO = new UserDAOImpl();
 
@@ -82,7 +82,10 @@ public class LoginController {
             userDAO.updateLastLogin(authenticatedUser.getId());
 
             SessionManager.getInstance().setCurrentUser(authenticatedUser);
-            SessionManager.getInstance().setRememberMe(rememberMeCheckBox.isSelected());
+
+            // Check if rememberMeCheckBox exists and is selected
+            boolean rememberMe = rememberMeCheckBox != null && rememberMeCheckBox.isSelected();
+            SessionManager.getInstance().setRememberMe(rememberMe);
 
             showSuccess("Login berhasil! Mengalihkan ke dashboard...");
 
@@ -99,7 +102,13 @@ public class LoginController {
 
                 @Override
                 protected void succeeded() {
-                    SceneSwitcher.switchTo("Dashboard.fxml", (Stage) loginButton.getScene().getWindow());
+                    try {
+                        SceneSwitcher.switchTo("Dashboard.fxml", (Stage) loginButton.getScene().getWindow());
+                    } catch (Exception e) {
+                        logger.severe("Error switching to dashboard: " + e.getMessage());
+                        showError("Gagal mengalihkan ke dashboard: " + e.getMessage());
+                        setButtonState(true);
+                    }
                 }
             };
 
