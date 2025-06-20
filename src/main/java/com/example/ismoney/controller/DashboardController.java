@@ -45,7 +45,7 @@ public class DashboardController {
     @FXML
     private void handleSavingGoalButton() {
         try{
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/ismoney/SavingGoal/SavingGoal.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/ismoney/savingGoals/savingGoalForm.fxml"));
             Parent root = loader.load();
 
             Stage GoalsStage = new Stage();

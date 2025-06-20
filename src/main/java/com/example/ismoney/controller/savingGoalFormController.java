@@ -3,9 +3,15 @@ package com.example.ismoney.controller;
 import com.example.ismoney.dao.SavingGoalDAO;
 import com.example.ismoney.model.savingGoal;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URL;
 import java.time.LocalDate;
@@ -20,8 +26,8 @@ public class savingGoalFormController implements Initializable {
     @FXML private ComboBox<String> statusComboBox;
     @FXML private Button simpanButton;
     @FXML private Button batalButton;
+    @FXML private Button GoalsListButton;
 
-    // Progress display elements
     @FXML private ProgressBar progressBar;
     @FXML private Label progressLabel;
     @FXML private Label remainingLabel;
@@ -47,6 +53,7 @@ public class savingGoalFormController implements Initializable {
     private void setupEventHandlers() {
         simpanButton.setOnAction(event -> handleSimpan());
         batalButton.setOnAction(event -> handleBatal());
+        GoalsListButton.setOnAction(event ->  handleGoalsListButton());
 
         // Update progress saat amount berubah
         targetAmountField.textProperty().addListener((obs, oldVal, newVal) -> updateProgressDisplay());
@@ -173,6 +180,25 @@ public class savingGoalFormController implements Initializable {
 
     private void handleBatal() {
         clearForm();
+    }
+
+    @FXML
+    private void handleGoalsListButton() {
+        try{
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/ismoney/savingGoals/savingGoalList.fxml"));
+            Parent root = loader.load();
+
+            Stage GoalsStage = new Stage();
+            GoalsStage.setTitle("Daftar Goals");
+            GoalsStage.setScene(new Scene(root));
+            GoalsStage.initModality(Modality.APPLICATION_MODAL);
+
+            GoalsStage.showAndWait();
+
+        } catch (IOException e) {
+            showAlert(Alert.AlertType.ERROR, "Error", "Gagal membuka form saving goals List: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     private void clearForm() {

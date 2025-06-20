@@ -61,11 +61,14 @@
             </HBox>
 
             <VBox spacing="8.0" style="-fx-background-color: #f8f9fa; -fx-background-radius: 8; -fx-padding: 15;">
-                <Label text="Progress Preview" textFill="#333">
-                    <font>
-                        <Font name="System Bold" size="14.0" />
-                    </font>
-                </Label>
+                <HBox spacing="20.0">
+                    <Label text="Progress Preview" textFill="#333">
+                        <font>
+                            <Font name="System Bold" size="17.0" />
+                        </font>
+                    </Label>
+                    <Button fx:id="GoalsListButton" prefHeight="5.0" prefWidth="90.0" style="-fx-background-color: #8c0093; -fx-text-fill: white; -fx-background-radius: 8; -fx-font-weight: bold;" text="Daftar Goals" />
+                </HBox>
                 <ProgressBar fx:id="progressBar" prefHeight="20.0" prefWidth="658.0" progress="0.0" style="-fx-accent: #4CAF50;" />
 
                 <HBox alignment="CENTER_LEFT" spacing="10.0">
