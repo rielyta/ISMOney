@@ -9,11 +9,16 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 
+import java.io.IOException;
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -21,22 +26,19 @@ import java.util.stream.Collectors;
 public class TransactionListController {
 
     @FXML private TableView<Transaction> transactionTable;
-    @FXML private TableColumn<Transaction, Integer> idColumn;
     @FXML private TableColumn<Transaction, String> dateColumn;
-    @FXML private TableColumn<Transaction, String> typeColumn;
+    @FXML private TableColumn<Transaction, BigDecimal> incomeColumn;
+    @FXML private TableColumn<Transaction, BigDecimal> expenseColumn;
     @FXML private TableColumn<Transaction, String> categoryColumn;
     @FXML private TableColumn<Transaction, BigDecimal> amountColumn;
-    @FXML private TableColumn<Transaction, String> noteColumn;
 
-    @FXML private DatePicker startDatePicker;
-    @FXML private DatePicker endDatePicker;
-    @FXML private ComboBox<String> typeFilterComboBox;
-    @FXML private ComboBox<Category> categoryFilterComboBox;
     @FXML private TextField searchField;
-    @FXML private Button filterButton;
-    @FXML private Button clearFilterButton;
+    @FXML private ComboBox<String> filterComboBox;
+    @FXML private Button searchButton;
+    @FXML private Button addTransactionButton;
     @FXML private Button editButton;
     @FXML private Button deleteButton;
+    @FXML private Button refreshButton;
 
     private TransactionDAO transactionDAO;
     private CategoryDAO categoryDAO;
@@ -45,34 +47,94 @@ public class TransactionListController {
 
     @FXML
     public void initialize() {
-        transactionDAO = new TransactionDAO();
-        categoryDAO = new CategoryDAO();
+        System.out.println("TransactionListController initialized!"); // Debug line
 
-        setupTableColumns();
-        setupFilterControls();
-        loadTransactions();
-        setupTableSelectionListener();
+        try {
+            transactionDAO = new TransactionDAO();
+            categoryDAO = new CategoryDAO();
+
+            setupTableColumns();
+            setupFilterControls();
+            loadTransactions();
+            setupTableSelectionListener();
+
+            System.out.println("TransactionListController setup completed!"); // Debug line
+        } catch (Exception e) {
+            System.err.println("Error initializing TransactionListController: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     private void setupTableColumns() {
-        idColumn.setCellValueFactory(new PropertyValueFactory<>("transactionId"));
-
+        // Setup kolom tanggal
         dateColumn.setCellValueFactory(cellData ->
                 new SimpleStringProperty(cellData.getValue().getTransactionDate()
                         .format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))));
 
-        typeColumn.setCellValueFactory(cellData ->
-                new SimpleStringProperty(cellData.getValue().getType().toString()));
-
-        categoryColumn.setCellValueFactory(cellData -> {
-            Category category = categoryDAO.getCategoryById(cellData.getValue().getCategoryId());
-            return new SimpleStringProperty(category != null ? category.getName() : "Unknown");
+        // Setup kolom pemasukan (hanya tampilkan jika INCOME)
+        incomeColumn.setCellValueFactory(cellData -> {
+            Transaction transaction = cellData.getValue();
+            if (transaction.getType() == TransactionType.INCOME) {
+                return new javafx.beans.property.SimpleObjectProperty<>(transaction.getAmount());
+            }
+            return new javafx.beans.property.SimpleObjectProperty<>(null);
         });
 
-        amountColumn.setCellValueFactory(new PropertyValueFactory<>("amount"));
-        noteColumn.setCellValueFactory(new PropertyValueFactory<>("note"));
+        // Setup kolom pengeluaran (hanya tampilkan jika OUTCOME)
+        expenseColumn.setCellValueFactory(cellData -> {
+            Transaction transaction = cellData.getValue();
+            if (transaction.getType() == TransactionType.OUTCOME) {
+                return new javafx.beans.property.SimpleObjectProperty<>(transaction.getAmount());
+            }
+            return new javafx.beans.property.SimpleObjectProperty<>(null);
+        });
 
-        // Format amount column to show currency
+        // Setup kolom kategori
+        categoryColumn.setCellValueFactory(cellData -> {
+            try {
+                Category category = categoryDAO.getCategoryById(cellData.getValue().getCategoryId());
+                return new SimpleStringProperty(category != null ? category.getName() : "Unknown");
+            } catch (Exception e) {
+                return new SimpleStringProperty("Unknown");
+            }
+        });
+
+        // Setup kolom total
+        amountColumn.setCellValueFactory(new PropertyValueFactory<>("amount"));
+
+        // Format kolom currency
+        formatCurrencyColumns();
+    }
+
+    private void formatCurrencyColumns() {
+        incomeColumn.setCellFactory(column -> new TableCell<Transaction, BigDecimal>() {
+            @Override
+            protected void updateItem(BigDecimal amount, boolean empty) {
+                super.updateItem(amount, empty);
+                if (empty || amount == null) {
+                    setText("");
+                    setStyle("");
+                } else {
+                    setText("Rp " + String.format("%,.0f", amount.doubleValue()));
+                    setStyle("-fx-text-fill: green; -fx-font-weight: bold;");
+                }
+            }
+        });
+
+        expenseColumn.setCellFactory(column -> new TableCell<Transaction, BigDecimal>() {
+            @Override
+            protected void updateItem(BigDecimal amount, boolean empty) {
+                super.updateItem(amount, empty);
+                if (empty || amount == null) {
+                    setText("");
+                    setStyle("");
+                } else {
+                    setText("Rp " + String.format("%,.0f", amount.doubleValue()));
+                    setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
+                }
+            }
+        });
+
         amountColumn.setCellFactory(column -> new TableCell<Transaction, BigDecimal>() {
             @Override
             protected void updateItem(BigDecimal amount, boolean empty) {
@@ -84,38 +146,11 @@ public class TransactionListController {
                 }
             }
         });
-
-        typeColumn.setCellFactory(column -> new TableCell<Transaction, String>() {
-            @Override
-            protected void updateItem(String type, boolean empty) {
-                super.updateItem(type, empty);
-                if (empty || type == null) {
-                    setText("");
-                    setStyle("");
-                } else {
-                    setText(type);
-                    if (type.equals("INCOME")) {
-                        setStyle("-fx-text-fill: green; -fx-font-weight: bold;");
-                    } else {
-                        setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
-                    }
-                }
-            }
-        });
     }
 
     private void setupFilterControls() {
-        typeFilterComboBox.setItems(FXCollections.observableArrayList("ALL", "INCOME", "OUTCOME"));
-        typeFilterComboBox.setValue("ALL");
-
-        List<Category> categories = categoryDAO.getAllCategories();
-        Category allCategory = new Category(-1, "ALL", "ALL");
-        categories.add(0, allCategory);
-        categoryFilterComboBox.setItems(FXCollections.observableArrayList(categories));
-        categoryFilterComboBox.setValue(allCategory);
-
-        endDatePicker.setValue(LocalDate.now());
-        startDatePicker.setValue(LocalDate.now().minusMonths(1));
+        filterComboBox.setItems(FXCollections.observableArrayList("Semua", "Pemasukan", "Pengeluaran"));
+        filterComboBox.setValue("Semua");
     }
 
     private void setupTableSelectionListener() {
@@ -126,47 +161,45 @@ public class TransactionListController {
     }
 
     private void loadTransactions() {
-        List<Transaction> transactions = transactionDAO.getTransactionsByUserId(CURRENT_USER_ID);
-        allTransactions = FXCollections.observableArrayList(transactions);
-        transactionTable.setItems(allTransactions);
+        try {
+            List<Transaction> transactions = transactionDAO.getTransactionsByUserId(CURRENT_USER_ID);
+            allTransactions = FXCollections.observableArrayList(transactions);
+            transactionTable.setItems(allTransactions);
+            System.out.println("Loaded " + transactions.size() + " transactions"); // Debug line
+        } catch (Exception e) {
+            System.err.println("Error loading transactions: " + e.getMessage());
+            showAlert("Kesalahan", "Gagal memuat data transaksi: " + e.getMessage());
+        }
     }
 
     @FXML
     private void handleFilter() {
-        LocalDate startDate = startDatePicker.getValue();
-        LocalDate endDate = endDatePicker.getValue();
-        String typeFilter = typeFilterComboBox.getValue();
-        Category categoryFilter = categoryFilterComboBox.getValue();
+        System.out.println("Filter button clicked!"); // Debug line
+        String filterValue = filterComboBox.getValue();
         String searchText = searchField.getText().toLowerCase().trim();
 
         List<Transaction> filteredTransactions = allTransactions.stream()
                 .filter(transaction -> {
-                    // Date filter
-                    if (startDate != null && transaction.getTransactionDate().isBefore(startDate)) {
-                        return false;
-                    }
-                    if (endDate != null && transaction.getTransactionDate().isAfter(endDate)) {
-                        return false;
-                    }
-
-                    // Type filter
-                    if (!typeFilter.equals("ALL") && !transaction.getType().toString().equals(typeFilter)) {
-                        return false;
+                    // Filter berdasarkan tipe
+                    if (!filterValue.equals("Semua")) {
+                        TransactionType filterType = filterValue.equals("Pemasukan") ?
+                                TransactionType.INCOME : TransactionType.OUTCOME;
+                        if (transaction.getType() != filterType) {
+                            return false;
+                        }
                     }
 
-                    // Category filter
-                    if (categoryFilter.getCategoriesId() != -1 &&
-                            !transaction.getCategoryId().equals(categoryFilter.getCategoriesId())) {
-                        return false;
-                    }
-
-                    // Search filter (note and category name)
+                    // Filter berdasarkan pencarian
                     if (!searchText.isEmpty()) {
-                        Category category = categoryDAO.getCategoryById(transaction.getCategoryId());
-                        String categoryName = category != null ? category.getName().toLowerCase() : "";
-                        String note = transaction.getNote() != null ? transaction.getNote().toLowerCase() : "";
+                        try {
+                            Category category = categoryDAO.getCategoryById(transaction.getCategoryId());
+                            String categoryName = category != null ? category.getName().toLowerCase() : "";
+                            String note = transaction.getNote() != null ? transaction.getNote().toLowerCase() : "";
 
-                        if (!categoryName.contains(searchText) && !note.contains(searchText)) {
+                            if (!categoryName.contains(searchText) && !note.contains(searchText)) {
+                                return false;
+                            }
+                        } catch (Exception e) {
                             return false;
                         }
                     }
@@ -179,26 +212,45 @@ public class TransactionListController {
     }
 
     @FXML
-    private void handleClearFilter() {
-        startDatePicker.setValue(LocalDate.now().minusMonths(1));
-        endDatePicker.setValue(LocalDate.now());
-        typeFilterComboBox.setValue("ALL");
-        categoryFilterComboBox.setValue(categoryFilterComboBox.getItems().get(0));
-        searchField.clear();
-        transactionTable.setItems(allTransactions);
+    private void handleAddTransaction() {
+        System.out.println("Add Transaction button clicked!"); // Debug line
+        try {
+            // Load FXML file untuk form transaksi
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/ismoney/Transaction/TransactionForm.fxml"));
+            Parent root = loader.load();
+
+            // Buat stage baru untuk form transaksi
+            Stage transactionStage = new Stage();
+            transactionStage.setTitle("Tambah Transaksi");
+            transactionStage.setScene(new Scene(root));
+
+            // Set modality agar user harus menutup window ini sebelum kembali ke main window
+            transactionStage.initModality(Modality.APPLICATION_MODAL);
+
+            // Tampilkan form transaksi dan tunggu sampai ditutup
+            transactionStage.showAndWait();
+
+            // Refresh tabel setelah form ditutup
+            loadTransactions();
+
+        } catch (IOException e) {
+            showAlert("Kesalahan", "Gagal membuka form transaksi: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     @FXML
     private void handleEdit() {
+        System.out.println("Edit button clicked!"); // Debug line
         Transaction selectedTransaction = transactionTable.getSelectionModel().getSelectedItem();
         if (selectedTransaction != null) {
-            // TODO: Open edit form with selected transaction data
-            System.out.println("Edit transaction: " + selectedTransaction.getTransactionId());
+            showAlert("Info", "Fitur edit akan segera tersedia!");
         }
     }
 
     @FXML
     private void handleDelete() {
+        System.out.println("Delete button clicked!"); // Debug line
         Transaction selectedTransaction = transactionTable.getSelectionModel().getSelectedItem();
         if (selectedTransaction != null) {
             Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
@@ -207,22 +259,21 @@ public class TransactionListController {
             confirmAlert.setContentText("Apakah Anda yakin ingin menghapus transaksi ini?");
 
             if (confirmAlert.showAndWait().get() == ButtonType.OK) {
-                boolean success = transactionDAO.deleteTransaction(selectedTransaction.getTransactionId());
-                if (success) {
-                    loadTransactions(); // Reload table
-                    showSuccessAlert("Berhasil", "Transaksi berhasil dihapus!");
-                } else {
-                    showAlert("Error", "Gagal menghapus transaksi.");
+                try {
+                    boolean success = transactionDAO.deleteTransaction(selectedTransaction.getTransactionId());
+                    if (success) {
+                        loadTransactions(); // Reload tabel
+                        showSuccessAlert("Berhasil", "Transaksi berhasil dihapus!");
+                    } else {
+                        showAlert("Kesalahan", "Gagal menghapus transaksi.");
+                    }
+                } catch (Exception e) {
+                    showAlert("Kesalahan", "Terjadi kesalahan saat menghapus: " + e.getMessage());
                 }
             }
         }
     }
 
-    @FXML
-    private void handleRefresh() {
-        loadTransactions();
-        handleClearFilter();
-    }
 
     private void showAlert(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.WARNING);

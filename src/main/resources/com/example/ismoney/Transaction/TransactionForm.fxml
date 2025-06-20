@@ -51,7 +51,7 @@
             </Label>
          </children>
       </Pane>
-      <Button layoutX="358.0" layoutY="435.0" mnemonicParsing="false" onAction="#handleSaveTransaction" prefHeight="25.0" prefWidth="133.0" text="Simpan" />
+      <Button layoutX="358.0" layoutY="435.0" mnemonicParsing="false" onAction="#handleSaveTransaction" prefHeight="25.0" prefWidth="133.0" style="-fx-background-color: #8c0093;" text="Simpan" textFill="WHITE" />
       <Button fx:id="handleCancel" layoutX="504.0" layoutY="435.0" mnemonicParsing="false" onAction="#handleCancel" prefHeight="25.0" prefWidth="127.0" text="Batal" />
    </children>
 </AnchorPane>

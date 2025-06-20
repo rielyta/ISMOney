@@ -81,7 +81,7 @@ public class TransactionFormController {
             Transaction newTransaction = new Transaction();
             newTransaction.setUserId(CURRENT_USER_ID);
             newTransaction.setAmount(amount);
-            newTransaction.setType(type.equals("INCOME") ? TransactionType.INCOME : TransactionType.OUTCOME);
+            newTransaction.setType(type.equals("Pendapatan") ? TransactionType.INCOME : TransactionType.OUTCOME);
             newTransaction.setCategoryId(category.getCategoriesId());
             newTransaction.setNote(note.isEmpty() ? null : note);
             newTransaction.setTransactionDate(date);
