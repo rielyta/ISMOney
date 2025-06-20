@@ -16,6 +16,7 @@ public class DashboardController {
 
     @FXML private Button transactionButton;
     @FXML private Button savingGoalButton;
+    @FXML private Button GoalsListButton;
 
     @FXML
     public void initialize() {
@@ -73,14 +74,14 @@ public class DashboardController {
     }
 
     @FXML
-    private void handleSavingGoalButton() {
+    private void handleGoalsListButton() {
         try {
             String[] possiblePaths = {
-                    "/com/example/ismoney/savingGoals/savingGoalForm.fxml",
-                    "/savingGoals/savingGoalForm.fxml",
-                    "/savingGoalForm.fxml",
-                    "savingGoals/savingGoalForm.fxml",
-                    "savingGoalForm.fxml"
+                    "/com/example/ismoney/savingGoals/savingGoalList.fxml",
+                    "/savingGoals/savingGoalList.fxml",
+                    "/savingGoalList.fxml",
+                    "savingGoals/savingGoalList.fxml",
+                    "savingGoalList.fxml"
             };
 
             URL fxmlUrl = null;
@@ -90,7 +91,7 @@ public class DashboardController {
                 fxmlUrl = getClass().getResource(path);
                 if (fxmlUrl != null) {
                     workingPath = path;
-                    System.out.println("Found SavingGoal FXML at: " + path);
+                    System.out.println("Found SavingGoalList FXML at: " + path);
                     break;
                 } else {
                     System.out.println("SavingGoal FXML not found at: " + path);
@@ -98,7 +99,7 @@ public class DashboardController {
             }
 
             if (fxmlUrl == null) {
-                showAlert("Info", "File SavingGoal FXML tidak ditemukan.\nFitur Target Tabungan akan segera tersedia!");
+                showAlert("Info", "File SavingGoal FXML tidak ditemukan.");
                 return;
             }
 
@@ -113,7 +114,7 @@ public class DashboardController {
             goalsStage.showAndWait();
 
         } catch (IOException e) {
-            showAlert("Kesalahan", "Gagal membuka form target tabungan: " + e.getMessage());
+            showAlert("Kesalahan", "Gagal membuka list target tabungan: " + e.getMessage());
             e.printStackTrace();
         } catch (Exception e) {
             showAlert("Kesalahan", "Terjadi kesalahan tidak terduga: " + e.getMessage());

@@ -19,7 +19,8 @@
                 </font>
             </Label>
             <TextField fx:id="addSavingAmountField" prefWidth="150.0" promptText="Nominal" style=" -fx-border-color: #ddd;" />
-            <Button fx:id="addSavingButton" prefHeight="30.0" style="-fx-background-color: #8c0093; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-weight: bold;" text="Tambah" />
+            <Button fx:id="addSavingButton" prefHeight="30.0" style="-fx-background-color: #8c0093; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-weight: bold;" text="Update" />
+            <Button fx:id="GoalFormButton" prefHeight="30.0" style="-fx-background-color: #A110A8; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-weight: bold;" text="Tambah" />
             <Region HBox.hgrow="ALWAYS" />
             <Button fx:id="refreshButton" prefHeight="30.0" style="-fx-background-color: #2196F3; -fx-text-fill: white; -fx-background-radius: 5;" text="Refresh" />
         </HBox>
