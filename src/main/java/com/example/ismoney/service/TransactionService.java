@@ -6,6 +6,8 @@ import com.example.ismoney.model.Transaction;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.List;
+import com.example.ismoney.model.TransactionType;
+import java.math.BigDecimal;
 
 public class TransactionService {
     private final TransactionDAO transactionDAO;
@@ -33,7 +35,7 @@ public class TransactionService {
     }
 
     private void validateTransaction(Transaction transaction) {
-        if (transaction.getAmount() <= 0) {
+        if (transaction.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Transaction amount must be positive");
         }
 
@@ -42,11 +44,11 @@ public class TransactionService {
             throw new IllegalArgumentException("Transaction type must be 'income' or 'expense'");
         }
 
-        if (transaction.getDescription() == null || transaction.getDescription().trim().isEmpty()) {
-            throw new IllegalArgumentException("Transaction description cannot be empty");
+        if (transaction.getNote() == null || transaction.getNote().trim().isEmpty()) {
+            throw new IllegalArgumentException("Transaction note cannot be empty");
         }
 
-        if (transaction.getDate() == null) {
+        if (transaction.getTransactionDate() == null) {
             throw new IllegalArgumentException("Transaction date cannot be null");
         }
     }
@@ -67,4 +69,29 @@ public class TransactionService {
         public double getTotalExpense() { return totalExpense; }
         public double getNetIncome() { return netIncome; }
     }
+
+    public double getTotalIncomeByDate(LocalDate date) throws SQLException {
+        return transactionDAO.getTransactionsByDate(date).stream()
+                .filter(t -> t.getType() == TransactionType.INCOME)
+                .map(Transaction::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .doubleValue();
+    }
+
+    public double getTotalExpenseByDate(LocalDate date) throws SQLException {
+        return transactionDAO.getTransactionsByDate(date).stream()
+                .filter(t -> t.getType() == TransactionType.OUTCOME)
+                .map(Transaction::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .doubleValue();
+    }
+
+    public List<Transaction> getTransactionsByDate(LocalDate date) {
+        return transactionDAO.getTransactionsByDate(date);
+    }
+
+    public List<Transaction> getTransactionsByDateRange(LocalDate startDate, LocalDate endDate) {
+        return transactionDAO.getTransactionsByDateRange(startDate, endDate);
+    }
+
 }

@@ -195,4 +195,71 @@ public class TransactionDAO {
 
         return BigDecimal.ZERO;
     }
+
+    public List<Transaction> getTransactionsByDate(LocalDate date) {
+        String sql = "SELECT * FROM transactions WHERE transaction_date = ? ORDER BY id DESC";
+        List<Transaction> transactions = new ArrayList<>();
+
+        try (Connection conn = dbConfig.getConnection();
+
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setDate(1, Date.valueOf(date));
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                Transaction transaction = new Transaction();
+                transaction.setTransactionId(rs.getInt("id"));
+                transaction.setUserId(rs.getInt("user_id"));
+                transaction.setCategoryId(rs.getInt("category_id"));
+                transaction.setAmount(rs.getBigDecimal("amount"));
+                transaction.setType(TransactionType.valueOf(rs.getString("type")));
+                transaction.setNote(rs.getString("note"));
+                transaction.setTransactionDate(rs.getDate("transaction_date").toLocalDate());
+                transactions.add(transaction);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return transactions;
+    }
+
+    public List<Transaction> getTransactionsByDateRange(LocalDate startDate, LocalDate endDate) {
+        String sql = "SELECT * FROM transactions WHERE transaction_date BETWEEN ? AND ? ORDER BY transaction_date DESC";
+        List<Transaction> transactions = new ArrayList<>();
+
+        try (Connection conn = dbConfig.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setDate(1, Date.valueOf(startDate));
+            stmt.setDate(2, Date.valueOf(endDate));
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                Transaction transaction = new Transaction();
+                transaction.setTransactionId(rs.getInt("transaction_id")); // pakai "id" jika memang field-nya "id"
+                transaction.setUserId(rs.getInt("user_id"));
+                transaction.setCategoryId(rs.getInt("category_id"));
+                transaction.setAmount(rs.getBigDecimal("amount"));
+                transaction.setType(TransactionType.valueOf(rs.getString("type")));
+                transaction.setNote(rs.getString("note"));
+                transaction.setTransactionDate(rs.getDate("transaction_date").toLocalDate());
+
+                Timestamp createdAt = rs.getTimestamp("created_at");
+                if (createdAt != null) {
+                    transaction.setCreatedAt(createdAt.toLocalDateTime());
+                }
+
+                transactions.add(transaction);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return transactions;
+    }
+
 }

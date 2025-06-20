@@ -1,66 +1,108 @@
-// Transaction.java
 package com.example.ismoney.model;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public class Transaction {
-    private int id;
-    private String type; // "income" or "expense"
-    private double amount;
-    private String description;
-    private String category;
-    private LocalDate date;
+    private int transactionId;
+    private int userId;
+    private BigDecimal amount;
+    private TransactionType type; // enum
+    private int categoryId;
+    private String note;
+    private LocalDate transactionDate;
+    private LocalDateTime createdAt;
 
-    // Default constructor
+    // Constructor kosong
     public Transaction() {}
 
-    // Constructor with parameters
-    public Transaction(String type, double amount, String description, String category, LocalDate date) {
-        this.type = type;
-        this.amount = amount;
-        this.description = description;
-        this.category = category;
-        this.date = date;
-    }
-
-    // Constructor with id
-    public Transaction(int id, String type, double amount, String description, String category, LocalDate date) {
-        this.id = id;
-        this.type = type;
-        this.amount = amount;
-        this.description = description;
-        this.category = category;
-        this.date = date;
-    }
-
     // Getters and Setters
-    public int getId() { return id; }
-    public void setId(int id) { this.id = id; }
+    public int getTransactionId() {
+        return transactionId;
+    }
 
-    public String getType() { return type; }
-    public void setType(String type) { this.type = type; }
+    public void setTransactionId(int transactionId) {
+        this.transactionId = transactionId;
+    }
 
-    public double getAmount() { return amount; }
-    public void setAmount(double amount) { this.amount = amount; }
+    public int getUserId() {
+        return userId;
+    }
 
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
+    public void setUserId(int userId) {
+        this.userId = userId;
+    }
 
-    public String getCategory() { return category; }
-    public void setCategory(String category) { this.category = category; }
+    public BigDecimal getAmount() {
+        return amount;
+    }
 
-    public LocalDate getDate() { return date; }
-    public void setDate(LocalDate date) { this.date = date; }
+    public void setAmount(BigDecimal amount) {
+        this.amount = amount;
+    }
+
+    public TransactionType getType() {
+        return type;
+    }
+
+    public void setType(TransactionType type) {
+        this.type = type;
+    }
+
+    public int getCategoryId() {
+        return categoryId;
+    }
+
+    public void setCategoryId(int categoryId) {
+        this.categoryId = categoryId;
+    }
+
+    public String getNote() {
+        return note;
+    }
+
+    public void setNote(String note) {
+        this.note = note;
+    }
+
+    public LocalDate getTransactionDate() {
+        return transactionDate;
+    }
+
+    public void setTransactionDate(LocalDate transactionDate) {
+        this.transactionDate = transactionDate;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
 
     @Override
     public String toString() {
         return "Transaction{" +
-                "id=" + id +
-                ", type='" + type + '\'' +
+                "transactionId=" + transactionId +
+                ", userId=" + userId +
                 ", amount=" + amount +
-                ", description='" + description + '\'' +
-                ", category='" + category + '\'' +
-                ", date=" + date +
+                ", type=" + type +
+                ", categoryId=" + categoryId +
+                ", note='" + note + '\'' +
+                ", transactionDate=" + transactionDate +
+                ", createdAt=" + createdAt +
                 '}';
+    }
+
+    private String category;
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
     }
 }

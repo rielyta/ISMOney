@@ -68,12 +68,12 @@ public class DashboardService {
 
         double monthlyIncome = monthlyTransactions.stream()
                 .filter(t -> "income".equals(t.getType()))
-                .mapToDouble(Transaction::getAmount)
+                .mapToDouble(t -> t.getAmount().doubleValue())
                 .sum();
 
         double monthlyExpense = monthlyTransactions.stream()
                 .filter(t -> "expense".equals(t.getType()))
-                .mapToDouble(Transaction::getAmount)
+                .mapToDouble(t -> t.getAmount().doubleValue())
                 .sum();
 
         // Get category breakdown
@@ -112,9 +112,9 @@ public class DashboardService {
         double balance = 0;
         for (Transaction transaction : allTransactions) {
             if ("income".equals(transaction.getType())) {
-                balance += transaction.getAmount();
+                balance += transaction.getAmount().doubleValue();
             } else if ("expense".equals(transaction.getType())) {
-                balance -= transaction.getAmount();
+                balance += transaction.getAmount().doubleValue();
             }
         }
 
@@ -128,8 +128,8 @@ public class DashboardService {
         return transactions.stream()
                 .filter(t -> "expense".equals(t.getType()))
                 .collect(Collectors.groupingBy(
-                        transaction -> transaction.getCategory() != null ? transaction.getCategory() : "Lainnya",
-                        Collectors.summingDouble(Transaction::getAmount)
+                        Transaction::getCategory,
+                        Collectors.summingDouble(t -> t.getAmount().doubleValue())
                 ));
     }
 
@@ -150,9 +150,9 @@ public class DashboardService {
             DailyFinancialData data = dailyData.get(transaction.getDate());
             if (data != null) {
                 if ("income".equals(transaction.getType())) {
-                    data.income += transaction.getAmount();
+                    balance += transaction.getAmount().doubleValue();
                 } else if ("expense".equals(transaction.getType())) {
-                    data.expense += transaction.getAmount();
+                    balance += transaction.getAmount().doubleValue();
                 }
             }
         }
