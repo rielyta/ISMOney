@@ -26,8 +26,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class TransactionListController {
@@ -46,11 +45,6 @@ public class TransactionListController {
     @FXML private Button editButton;
     @FXML private Button deleteButton;
     @FXML private LineChart<String, Number> lineChart;
-
-    // Summary labels
-    @FXML private Label totalIncomeLabel;
-    @FXML private Label totalExpenseLabel;
-    @FXML private Label balanceLabel;
 
     private TransactionDAO transactionDAO;
     private CategoryDAO categoryDAO;
@@ -72,9 +66,9 @@ public class TransactionListController {
             setupTableColumns();
             setupFilterControls();
             setupTableSelectionListener();
+            setupChart();
             loadTransactions();
             updateChart();
-
 
             System.out.println("TransactionListController setup completed!");
         } catch (Exception e) {
@@ -82,6 +76,26 @@ public class TransactionListController {
             e.printStackTrace();
             showAlert("Kesalahan", "Gagal menginisialisasi controller: " + e.getMessage());
         }
+    }
+
+    private void setupChart() {
+        // Configure chart appearance
+        lineChart.setTitle("Data Penjualan");
+        lineChart.setLegendVisible(true);
+        lineChart.setCreateSymbols(true);
+        lineChart.setAnimated(true);
+
+        // Style the chart
+        lineChart.getXAxis().setLabel("");
+        lineChart.getYAxis().setLabel("");
+        lineChart.getXAxis().setTickLabelsVisible(true);
+        lineChart.getYAxis().setTickLabelsVisible(true);
+
+        // Remove grid lines for cleaner look
+        lineChart.setHorizontalGridLinesVisible(false);
+        lineChart.setVerticalGridLinesVisible(false);
+        lineChart.setHorizontalZeroLineVisible(false);
+        lineChart.setVerticalZeroLineVisible(false);
     }
 
     private Integer getValidUserId() {
@@ -258,48 +272,60 @@ public class TransactionListController {
         try {
             if (allTransactions == null || allTransactions.isEmpty()) {
                 lineChart.getData().clear();
+                createSampleChart(); // Create sample chart when no data
                 return;
             }
 
-            // Group transactions by date
-            Map<LocalDate, BigDecimal> dailyIncome = allTransactions.stream()
+            // Get date range for the last 12 months or use actual data range
+            LocalDate endDate = LocalDate.now();
+            LocalDate startDate = endDate.minusMonths(11).withDayOfMonth(1);
+
+            // Create month labels
+            List<String> monthLabels = new ArrayList<>();
+            LocalDate current = startDate;
+            while (!current.isAfter(endDate)) {
+                monthLabels.add(current.format(DateTimeFormatter.ofPattern("MMM")));
+                current = current.plusMonths(1);
+            }
+
+            // Group transactions by month
+            Map<String, BigDecimal> monthlyIncome = allTransactions.stream()
                     .filter(t -> t.getType() == TransactionType.INCOME)
+                    .filter(t -> !t.getTransactionDate().isBefore(startDate) && !t.getTransactionDate().isAfter(endDate))
                     .collect(Collectors.groupingBy(
-                            Transaction::getTransactionDate,
+                            t -> t.getTransactionDate().format(DateTimeFormatter.ofPattern("MMM")),
                             Collectors.reducing(BigDecimal.ZERO, Transaction::getAmount, BigDecimal::add)
                     ));
 
-            Map<LocalDate, BigDecimal> dailyExpense = allTransactions.stream()
+            Map<String, BigDecimal> monthlyExpense = allTransactions.stream()
                     .filter(t -> t.getType() == TransactionType.OUTCOME)
+                    .filter(t -> !t.getTransactionDate().isBefore(startDate) && !t.getTransactionDate().isAfter(endDate))
                     .collect(Collectors.groupingBy(
-                            Transaction::getTransactionDate,
+                            t -> t.getTransactionDate().format(DateTimeFormatter.ofPattern("MMM")),
                             Collectors.reducing(BigDecimal.ZERO, Transaction::getAmount, BigDecimal::add)
                     ));
 
-            // Create series for chart
+            // Create series
             XYChart.Series<String, Number> incomeSeries = new XYChart.Series<>();
             incomeSeries.setName("Pemasukan");
 
             XYChart.Series<String, Number> expenseSeries = new XYChart.Series<>();
             expenseSeries.setName("Pengeluaran");
 
-            // Add data to series
-            dailyIncome.entrySet().stream()
-                    .sorted(Map.Entry.comparingByKey())
-                    .forEach(entry -> {
-                        String dateStr = entry.getKey().format(DateTimeFormatter.ofPattern("dd/MM"));
-                        incomeSeries.getData().add(new XYChart.Data<>(dateStr, entry.getValue()));
-                    });
+            // Add data points for each month
+            for (String month : monthLabels) {
+                BigDecimal income = monthlyIncome.getOrDefault(month, BigDecimal.ZERO);
+                BigDecimal expense = monthlyExpense.getOrDefault(month, BigDecimal.ZERO);
 
-            dailyExpense.entrySet().stream()
-                    .sorted(Map.Entry.comparingByKey())
-                    .forEach(entry -> {
-                        String dateStr = entry.getKey().format(DateTimeFormatter.ofPattern("dd/MM"));
-                        expenseSeries.getData().add(new XYChart.Data<>(dateStr, entry.getValue()));
-                    });
+                incomeSeries.getData().add(new XYChart.Data<>(month, income.divide(BigDecimal.valueOf(1000))));
+                expenseSeries.getData().add(new XYChart.Data<>(month, expense.divide(BigDecimal.valueOf(1000))));
+            }
 
             lineChart.getData().clear();
             lineChart.getData().addAll(incomeSeries, expenseSeries);
+
+            // Style the lines
+            styleChartLines();
 
         } catch (Exception e) {
             System.err.println("Error updating chart: " + e.getMessage());
@@ -307,6 +333,46 @@ public class TransactionListController {
         }
     }
 
+    private void createSampleChart() {
+        // Create sample data for demonstration
+        String[] months = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+
+        XYChart.Series<String, Number> series2020 = new XYChart.Series<>();
+        series2020.setName("2020");
+
+        XYChart.Series<String, Number> series2021 = new XYChart.Series<>();
+        series2021.setName("2021");
+
+        // Sample data points similar to the image
+        double[] data2020 = {1000, 1200, 800, 1500, 900, 1100, 1300, 1000, 1400, 1200, 1600, 1800};
+        double[] data2021 = {1100, 900, 1300, 1100, 1400, 1600, 1200, 1500, 1800, 1400, 2100, 2000};
+
+        for (int i = 0; i < months.length; i++) {
+            series2020.getData().add(new XYChart.Data<>(months[i], data2020[i]));
+            series2021.getData().add(new XYChart.Data<>(months[i], data2021[i]));
+        }
+
+        lineChart.getData().clear();
+        lineChart.getData().addAll(series2020, series2021);
+
+        styleChartLines();
+    }
+
+    private void styleChartLines() {
+        // Apply styling after chart is rendered
+        lineChart.applyCss();
+        lineChart.layout();
+
+        // Style the first series (blue line)
+        if (!lineChart.getData().isEmpty()) {
+            lineChart.getData().get(0).getNode().setStyle("-fx-stroke: #4A90E2; -fx-stroke-width: 3px;");
+
+            if (lineChart.getData().size() > 1) {
+                // Style the second series (green line)
+                lineChart.getData().get(1).getNode().setStyle("-fx-stroke: #7ED321; -fx-stroke-width: 3px;");
+            }
+        }
+    }
 
     @FXML
     private void handleFilter() {
@@ -372,7 +438,6 @@ public class TransactionListController {
             loadTransactions();
             updateChart();
 
-
         } catch (IOException e) {
             System.err.println("Error opening transaction form: " + e.getMessage());
             e.printStackTrace();
@@ -403,10 +468,8 @@ public class TransactionListController {
                 loadTransactions();
                 updateChart();
 
-
             } catch (IOException e) {
                 System.err.println("Error opening edit form: " + e.getMessage());
-                // Fallback message if edit form doesn't exist yet
                 showAlert("Info", "Fitur edit dalam pengembangan. Silakan hapus dan buat ulang transaksi.");
             }
         }
@@ -430,7 +493,6 @@ public class TransactionListController {
                     if (success) {
                         loadTransactions();
                         updateChart();
-
                         showSuccessAlert("Berhasil", "Transaksi berhasil dihapus!");
                     } else {
                         showAlert("Kesalahan", "Gagal menghapus transaksi.");
