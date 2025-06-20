@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 
-public class savingGoal {
+public class SavingGoal {
     private Integer goalId;
     private String goalName;
     private BigDecimal targetAmount;
@@ -14,7 +14,7 @@ public class savingGoal {
     private String description;
     private String status;
 
-    public savingGoal() {
+    public SavingGoal() {
         this.currentAmount = BigDecimal.ZERO;
         this.createdDate = LocalDate.now();
         this.status = "ACTIVE";

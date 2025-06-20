@@ -1,11 +1,10 @@
 package com.example.ismoney.dao;
 
 import com.example.ismoney.database.DatabaseConfig;
-import com.example.ismoney.model.savingGoal;
+import com.example.ismoney.model.SavingGoal;
 
 import java.math.BigDecimal;
 import java.sql.*;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,11 +36,14 @@ public class SavingGoalDAO {
     }
 
     // method utk update status otomatis berdasarkan progres
-    public void updateGoalStatusBasedOnProgress() {
-        String sql = "UPDATE saving_goals SET status = 'COMPLETED' WHERE current_amount >= target_amount AND status = 'ACTIVE'";
+    public void updateGoalStatusBasedOnProgress(int goalId, String status) {
+        String sql = "UPDATE saving_goals SET status = ? WHERE id = ?";
 
         try (Connection conn = dbConfig.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, status);
+            stmt.setInt(2, goalId);
 
             stmt.executeUpdate();
 
@@ -52,7 +54,7 @@ public class SavingGoalDAO {
     }
 
     // CREATE
-    public boolean addSavingGoal(savingGoal goal) {
+    public boolean addSavingGoal(SavingGoal goal) {
         String sql = "INSERT INTO saving_goals (goal_name, target_amount, current_amount, target_date, created_date, description, status) VALUES (?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = dbConfig.getConnection();
@@ -85,8 +87,8 @@ public class SavingGoalDAO {
     }
 
     // READ
-    public List<savingGoal> getAllSavingGoals() {
-        List<savingGoal> goals = new ArrayList<>();
+    public List<SavingGoal> getAllSavingGoals() {
+        List<SavingGoal> goals = new ArrayList<>();
         String sql = "SELECT goal_id, goal_name, target_amount, current_amount, target_date, created_date, description, status FROM saving_goals ORDER BY created_date DESC";
 
         try (Connection conn = dbConfig.getConnection();
@@ -94,7 +96,7 @@ public class SavingGoalDAO {
              ResultSet rs = stmt.executeQuery()) {
 
             while (rs.next()) {
-                savingGoal goal = new savingGoal();
+                SavingGoal goal = new SavingGoal();
                 goal.setGoalId(rs.getInt("goal_id"));
                 goal.setGoalName(rs.getString("goal_name"));
                 goal.setTargetAmount(rs.getBigDecimal("target_amount"));
@@ -114,7 +116,7 @@ public class SavingGoalDAO {
         return goals;
     }
 
-    public savingGoal getSavingGoalById(int goalId) {
+    public SavingGoal getSavingGoalById(int goalId) {
         String sql = "SELECT goal_id, goal_name, target_amount, current_amount, target_date, created_date, description, status FROM saving_goals WHERE goal_id = ?";
 
         try (Connection conn = dbConfig.getConnection();
@@ -124,7 +126,7 @@ public class SavingGoalDAO {
             ResultSet rs = stmt.executeQuery();
 
             if (rs.next()) {
-                savingGoal goal = new savingGoal();
+                SavingGoal goal = new SavingGoal();
                 goal.setGoalId(rs.getInt("goal_id"));
                 goal.setGoalName(rs.getString("goal_name"));
                 goal.setTargetAmount(rs.getBigDecimal("target_amount"));
@@ -145,7 +147,7 @@ public class SavingGoalDAO {
     }
 
     // UPDATE
-    public boolean updateSavingGoal(savingGoal goal) {
+    public boolean updateSavingGoal(SavingGoal goal) {
         String sql = "UPDATE saving_goals SET goal_name = ?, target_amount = ?, current_amount = ?, target_date = ?, description = ?, status = ? WHERE goal_id = ?";
 
         try (Connection conn = dbConfig.getConnection();
@@ -185,5 +187,30 @@ public class SavingGoalDAO {
         }
 
         return false;
+    }
+
+    public List<SavingGoal> getActiveSavingGoals() throws SQLException {
+        List<SavingGoal> savingGoals = new ArrayList<>();
+        String sql = "SELECT * FROM saving_goals WHERE status = 'active' ORDER BY target_date ASC";
+
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    SavingGoal savingGoal = new SavingGoal(
+                            rs.getInt("id"),
+                            rs.getString("name"),
+                            rs.getDouble("target_amount"),
+                            rs.getDouble("current_amount"),
+                            rs.getDate("target_date").toLocalDate(),
+                            rs.getDate("created_date").toLocalDate(),
+                            rs.getString("status")
+                    );
+                    savingGoals.add(savingGoal);
+                }
+            }
+        }
+        return savingGoals;
     }
 }

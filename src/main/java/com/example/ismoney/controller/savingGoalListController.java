@@ -1,7 +1,7 @@
 package com.example.ismoney.controller;
 
 import com.example.ismoney.dao.SavingGoalDAO;
-import com.example.ismoney.model.savingGoal;
+import com.example.ismoney.model.SavingGoal;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
@@ -15,13 +15,13 @@ import java.util.ResourceBundle;
 
 public class savingGoalListController implements Initializable {
 
-    @FXML private TableView<savingGoal> goalTableView;
-    @FXML private TableColumn<savingGoal, String> goalNameColumn;
-    @FXML private TableColumn<savingGoal, BigDecimal> targetAmountColumn;
-    @FXML private TableColumn<savingGoal, BigDecimal> currentAmountColumn;
-    @FXML private TableColumn<savingGoal, LocalDate> targetDateColumn;
-    @FXML private TableColumn<savingGoal, String> statusColumn;
-    @FXML private TableColumn<savingGoal, String> progressColumn;
+    @FXML private TableView<SavingGoal> goalTableView;
+    @FXML private TableColumn<SavingGoal, String> goalNameColumn;
+    @FXML private TableColumn<SavingGoal, BigDecimal> targetAmountColumn;
+    @FXML private TableColumn<SavingGoal, BigDecimal> currentAmountColumn;
+    @FXML private TableColumn<SavingGoal, LocalDate> targetDateColumn;
+    @FXML private TableColumn<SavingGoal, String> statusColumn;
+    @FXML private TableColumn<SavingGoal, String> progressColumn;
 
     @FXML private TextField addSavingAmountField;
     @FXML private Button addSavingButton;
@@ -47,13 +47,13 @@ public class savingGoalListController implements Initializable {
 
         // custom cell untuk nampilin progres
         progressColumn.setCellValueFactory(cellData -> {
-            savingGoal goal = cellData.getValue();
+            SavingGoal goal = cellData.getValue();
             String progress = String.format("%.1f%%", goal.getProgressPercentage());
             return new javafx.beans.property.SimpleStringProperty(progress);
         });
 
         // custom cell untuk nampilin status bewarna
-        statusColumn.setCellFactory(column -> new TableCell<savingGoal, String>() {
+        statusColumn.setCellFactory(column -> new TableCell<SavingGoal, String>() {
             @Override
             protected void updateItem(String status, boolean empty) {
                 super.updateItem(status, empty);
@@ -62,7 +62,7 @@ public class savingGoalListController implements Initializable {
                     setText(null);
                     setStyle("");
                 } else {
-                    savingGoal goal = getTableView().getItems().get(getIndex());
+                    SavingGoal goal = getTableView().getItems().get(getIndex());
                     String progressStatus = goal.getProgressStatus();
 
                     setText(status);
@@ -83,7 +83,7 @@ public class savingGoalListController implements Initializable {
         });
 
         // custom cell untuk progress bar
-        progressColumn.setCellFactory(column -> new TableCell<savingGoal, String>() {
+        progressColumn.setCellFactory(column -> new TableCell<SavingGoal, String>() {
             private final ProgressBar progressBar = new ProgressBar();
 
             @Override
@@ -93,7 +93,7 @@ public class savingGoalListController implements Initializable {
                 if (empty) {
                     setGraphic(null);
                 } else {
-                    savingGoal goal = getTableView().getItems().get(getIndex());
+                    SavingGoal goal = getTableView().getItems().get(getIndex());
                     double progressValue = goal.getProgressPercentage() / 100.0;
 
                     progressBar.setProgress(progressValue);
@@ -120,7 +120,7 @@ public class savingGoalListController implements Initializable {
 
         // Double click untuk edit
         goalTableView.setRowFactory(tv -> {
-            TableRow<savingGoal> row = new TableRow<>();
+            TableRow<SavingGoal> row = new TableRow<>();
             row.setOnMouseClicked(event -> {
                 if (event.getClickCount() == 2 && !row.isEmpty()) {
                     // TODO: Open edit form
@@ -132,7 +132,7 @@ public class savingGoalListController implements Initializable {
     }
 
     private void handleAddSaving() {
-        savingGoal selectedGoal = goalTableView.getSelectionModel().getSelectedItem();
+        SavingGoal selectedGoal = goalTableView.getSelectionModel().getSelectedItem();
 
         if (selectedGoal == null) {
             showAlert(Alert.AlertType.WARNING, "Peringatan", "Pilih goal terlebih dahulu");
@@ -177,7 +177,7 @@ public class savingGoalListController implements Initializable {
 
     private void loadGoals() {
         try {
-            List<savingGoal> goals = savingGoalDAO.getAllSavingGoals();
+            List<SavingGoal> goals = savingGoalDAO.getAllSavingGoals();
             goalTableView.getItems().clear();
             goalTableView.getItems().addAll(goals);
         } catch (Exception e) {
@@ -185,7 +185,7 @@ public class savingGoalListController implements Initializable {
         }
     }
 
-    private void showGoalDetails(savingGoal goal) {
+    private void showGoalDetails(SavingGoal goal) {
         String details = String.format(
                 "Goal: %s\n" +
                         "Target: Rp %,.2f\n" +

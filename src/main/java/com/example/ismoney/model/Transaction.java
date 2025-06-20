@@ -1,106 +1,66 @@
+// Transaction.java
 package com.example.ismoney.model;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 public class Transaction {
-    private Integer transactionId;  // Sesuai dengan database (transaction_id)
-    private Integer userId;         // Sesuai dengan database (user_id)
-    private BigDecimal amount;      // Sesuai dengan DECIMAL di database
-    private TransactionType type;
-    private Integer categoryId;     // Sesuai dengan database (category_id)
-    private String note;
-    private LocalDate transactionDate;
-    private LocalDateTime createdAt;
+    private int id;
+    private String type; // "income" or "expense"
+    private double amount;
+    private String description;
+    private String category;
+    private LocalDate date;
 
+    // Default constructor
     public Transaction() {}
 
-    public Transaction(Integer transactionId, Integer userId, BigDecimal amount,
-                       TransactionType type, Integer categoryId, String note, LocalDate transactionDate) {
-        this.transactionId = transactionId;
-        this.userId = userId;
-        this.amount = amount;
+    // Constructor with parameters
+    public Transaction(String type, double amount, String description, String category, LocalDate date) {
         this.type = type;
-        this.categoryId = categoryId;
-        this.note = note;
-        this.transactionDate = transactionDate;
+        this.amount = amount;
+        this.description = description;
+        this.category = category;
+        this.date = date;
+    }
+
+    // Constructor with id
+    public Transaction(int id, String type, double amount, String description, String category, LocalDate date) {
+        this.id = id;
+        this.type = type;
+        this.amount = amount;
+        this.description = description;
+        this.category = category;
+        this.date = date;
     }
 
     // Getters and Setters
-    public Integer getTransactionId() {
-        return transactionId;
-    }
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
 
-    public void setTransactionId(Integer transactionId) {
-        this.transactionId = transactionId;
-    }
+    public String getType() { return type; }
+    public void setType(String type) { this.type = type; }
 
-    public Integer getUserId() {
-        return userId;
-    }
+    public double getAmount() { return amount; }
+    public void setAmount(double amount) { this.amount = amount; }
 
-    public void setUserId(Integer userId) {
-        this.userId = userId;
-    }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
 
-    public BigDecimal getAmount() {
-        return amount;
-    }
+    public String getCategory() { return category; }
+    public void setCategory(String category) { this.category = category; }
 
-    public void setAmount(BigDecimal amount) {
-        this.amount = amount;
-    }
-
-    public TransactionType getType() {
-        return type;
-    }
-
-    public void setType(TransactionType type) {
-        this.type = type;
-    }
-
-    public Integer getCategoryId() {
-        return categoryId;
-    }
-
-    public void setCategoryId(Integer categoryId) {
-        this.categoryId = categoryId;
-    }
-
-    public String getNote() {
-        return note;
-    }
-
-    public void setNote(String note) {
-        this.note = note;
-    }
-
-    public LocalDate getTransactionDate() {
-        return transactionDate;
-    }
-
-    public void setTransactionDate(LocalDate transactionDate) {
-        this.transactionDate = transactionDate;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
+    public LocalDate getDate() { return date; }
+    public void setDate(LocalDate date) { this.date = date; }
 
     @Override
     public String toString() {
         return "Transaction{" +
-                "transactionId=" + transactionId +
+                "id=" + id +
+                ", type='" + type + '\'' +
                 ", amount=" + amount +
-                ", type=" + type +
-                ", categoryId=" + categoryId +
-                ", note='" + note + '\'' +
-                ", transactionDate=" + transactionDate +
+                ", description='" + description + '\'' +
+                ", category='" + category + '\'' +
+                ", date=" + date +
                 '}';
     }
 }
