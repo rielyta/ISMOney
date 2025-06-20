@@ -26,7 +26,6 @@ public class savingGoalFormController implements Initializable {
     @FXML private ComboBox<String> statusComboBox;
     @FXML private Button simpanButton;
     @FXML private Button batalButton;
-    @FXML private Button GoalsListButton;
 
     @FXML private ProgressBar progressBar;
     @FXML private Label progressLabel;
@@ -53,7 +52,6 @@ public class savingGoalFormController implements Initializable {
     private void setupEventHandlers() {
         simpanButton.setOnAction(event -> handleSimpan());
         batalButton.setOnAction(event -> handleBatal());
-        GoalsListButton.setOnAction(event ->  handleGoalsListButton());
 
         // Update progress saat amount berubah
         targetAmountField.textProperty().addListener((obs, oldVal, newVal) -> updateProgressDisplay());
@@ -180,25 +178,6 @@ public class savingGoalFormController implements Initializable {
 
     private void handleBatal() {
         clearForm();
-    }
-
-    @FXML
-    private void handleGoalsListButton() {
-        try{
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/ismoney/savingGoals/savingGoalList.fxml"));
-            Parent root = loader.load();
-
-            Stage GoalsStage = new Stage();
-            GoalsStage.setTitle("Daftar Goals");
-            GoalsStage.setScene(new Scene(root));
-            GoalsStage.initModality(Modality.APPLICATION_MODAL);
-
-            GoalsStage.showAndWait();
-
-        } catch (IOException e) {
-            showAlert(Alert.AlertType.ERROR, "Error", "Gagal membuka form saving goals List: " + e.getMessage());
-            e.printStackTrace();
-        }
     }
 
     private void clearForm() {
