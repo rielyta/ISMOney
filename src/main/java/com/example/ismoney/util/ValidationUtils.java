@@ -9,9 +9,6 @@ public class ValidationUtils {
     private static final Pattern USERNAME_PATTERN =
             Pattern.compile("^[a-zA-Z0-9_]{3,20}$");
 
-    private static final Pattern STRONG_PASSWORD_PATTERN =
-            Pattern.compile("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[a-zA-Z\\d@$!%*?&]{8,}$");
-
     public static boolean isValidEmail(String email) {
         return email != null && EMAIL_PATTERN.matcher(email.trim()).matches();
     }
@@ -21,7 +18,8 @@ public class ValidationUtils {
     }
 
     public static boolean isStrongPassword(String password) {
-        return password != null && STRONG_PASSWORD_PATTERN.matcher(password).matches();
+        // Simplified password validation - just check if it's not null and has minimum length
+        return password != null && password.length() >= 8;
     }
 
     public static String sanitizeInput(String input) {

@@ -44,8 +44,21 @@ public class DashboardController {
 
     @FXML
     private void handleSavingGoalButton() {
-        // TODO: Implement saving goal functionality
-        showAlert("Info", "Fitur Saving Goal akan segera hadir!");
+        try{
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/ismoney/savingGoals/savingGoalForm.fxml"));
+            Parent root = loader.load();
+
+            Stage GoalsStage = new Stage();
+            GoalsStage.setTitle("Saving Goals Anda");
+            GoalsStage.setScene(new Scene(root));
+            GoalsStage.initModality(Modality.APPLICATION_MODAL);
+
+            GoalsStage.showAndWait();
+
+        } catch (IOException e) {
+            showAlert("Error", "Gagal membuka form saving goals: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     private void showAlert(String title, String message) {
