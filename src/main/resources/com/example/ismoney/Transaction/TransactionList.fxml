@@ -13,39 +13,42 @@
 <?import javafx.scene.text.Font?>
 
 <AnchorPane prefHeight="498.0" prefWidth="780.0" style="-fx-background-color: radial-gradient(center 50% 50%, radius 100%, #63DBF3 0%, #A2EEF9 60%, #FFFFFF 90%);" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.ismoney.controller.TransactionListController">
-   <children>
-      <TableView fx:id="transactionTable" layoutX="28.0" layoutY="150.0" prefHeight="299.0" prefWidth="495.0">
-        <columns>
-          <TableColumn fx:id="dateColumn" prefWidth="83.0" text="Tanggal" />
-          <TableColumn fx:id="incomeColumn" prefWidth="109.0" text="Pendapatan" />
-            <TableColumn fx:id="expenseColumn" prefWidth="109.0" text="Pengeluaran" />
-            <TableColumn fx:id="categoryColumn" prefWidth="98.0" text="Kategori" />
-            <TableColumn fx:id="totalColumn" prefWidth="95.0" text="Total" />
-        </columns>
-      </TableView>
-      <Button fx:id="addTransactionButton" layoutX="377.0" layoutY="119.0" mnemonicParsing="false" onAction="#handleAddTransaction" prefHeight="25.0" prefWidth="139.0" text="Tambah Transaksi" />
-      <LineChart layoutX="523.0" layoutY="172.0" prefHeight="277.0" prefWidth="287.0">
-        <xAxis>
-          <CategoryAxis side="BOTTOM" />
-        </xAxis>
-        <yAxis>
-          <NumberAxis side="LEFT" />
-        </yAxis>
-      </LineChart>
-      <Label layoutX="313.0" layoutY="35.0" prefHeight="47.0" prefWidth="354.0" text="Daftar Transaksi" textFill="#8c0093">
-         <font>
-            <Font name="Arial Black" size="32.0" />
-         </font>
-      </Label>
-      <Label layoutX="571.0" layoutY="155.0" prefHeight="17.0" prefWidth="102.0" text="Chart ">
-         <font>
-            <Font name="System Bold" size="15.0" />
-         </font>
-      </Label>
-      <TextField fx:id="searchField" layoutX="101.0" layoutY="119.0" onAction="#handleFilter" prefHeight="25.0" prefWidth="159.0" />
-      <Button fx:id="searchButton" layoutX="28.0" layoutY="119.0" mnemonicParsing="false" onAction="#handleFilter" prefHeight="25.0" prefWidth="69.0" text="Cari" />
-      <ComboBox fx:id="filterComboBox" layoutX="276.0" layoutY="119.0" prefHeight="25.0" prefWidth="93.0" promptText="Filter" />
-      <Button fx:id="editButton" layoutX="471.0" layoutY="459.0" mnemonicParsing="false" text="Edit" />
-      <Button fx:id="deleteButton" layoutX="405.0" layoutY="459.0" mnemonicParsing="false" text="Hapus" />
-   </children>
+    <children>
+        <TableView fx:id="transactionTable" layoutX="28.0" layoutY="150.0" prefHeight="299.0" prefWidth="495.0">
+            <columns>
+                <TableColumn fx:id="dateColumn" prefWidth="83.0" text="Tanggal" />
+                <TableColumn fx:id="incomeColumn" prefWidth="109.0" text="Pendapatan" />
+                <TableColumn fx:id="expenseColumn" prefWidth="109.0" text="Pengeluaran" />
+                <TableColumn fx:id="categoryColumn" prefWidth="98.0" text="Kategori" />
+                <TableColumn fx:id="totalColumn" prefWidth="95.0" text="Total" />
+            </columns>
+        </TableView>
+        <Button fx:id="addTransactionButton" layoutX="377.0" layoutY="119.0" mnemonicParsing="false" onAction="#handleAddTransaction" prefHeight="25.0" prefWidth="139.0" text="Tambah Transaksi" />
+
+        <!-- Updated LineChart with fx:id -->
+        <LineChart fx:id="lineChart" layoutX="523.0" layoutY="172.0" prefHeight="277.0" prefWidth="257.0" title="Grafik Transaksi">
+            <xAxis>
+                <CategoryAxis label="Tanggal" side="BOTTOM" />
+            </xAxis>
+            <yAxis>
+                <NumberAxis label="Jumlah (Rp)" side="LEFT" />
+            </yAxis>
+        </LineChart>
+
+        <Label layoutX="41.0" layoutY="40.0" prefHeight="47.0" prefWidth="354.0" text="Daftar Transaksi" textFill="#8c0093">
+            <font>
+                <Font name="Arial Black" size="32.0" />
+            </font>
+        </Label>
+        <Label layoutX="571.0" layoutY="155.0" prefHeight="17.0" prefWidth="102.0" text="Grafik Keuangan">
+            <font>
+                <Font name="System Bold" size="15.0" />
+            </font>
+        </Label>
+        <TextField fx:id="searchField" layoutX="101.0" layoutY="119.0" onAction="#handleFilter" prefHeight="25.0" prefWidth="159.0" promptText="Cari kategori/catatan..." />
+        <Button fx:id="searchButton" layoutX="28.0" layoutY="119.0" mnemonicParsing="false" onAction="#handleFilter" prefHeight="25.0" prefWidth="69.0" text="Cari" />
+        <ComboBox fx:id="filterComboBox" layoutX="276.0" layoutY="119.0" onAction="#handleFilter" prefHeight="25.0" prefWidth="93.0" promptText="Filter" />
+        <Button fx:id="editButton" layoutX="471.0" layoutY="459.0" mnemonicParsing="false" onAction="#handleEdit" prefHeight="25.0" prefWidth="52.0" text="Edit" />
+        <Button fx:id="deleteButton" layoutX="405.0" layoutY="459.0" mnemonicParsing="false" onAction="#handleDelete" prefHeight="25.0" prefWidth="60.0" text="Hapus" />
+    </children>
 </AnchorPane>

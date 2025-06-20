@@ -4,11 +4,11 @@ import com.example.ismoney.database.DatabaseConfig;
 import com.example.ismoney.model.Transaction;
 import com.example.ismoney.model.TransactionType;
 
-import java.math.BigDecimal;
 import java.sql.*;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.time.LocalDate;
+import java.math.BigDecimal;
 
 public class TransactionDAO {
     private DatabaseConfig dbConfig;
@@ -17,42 +17,67 @@ public class TransactionDAO {
         this.dbConfig = DatabaseConfig.getInstance();
     }
 
-    // Create - Insert new transaction
+    // CREATE - Simpan transaksi baru
     public boolean saveTransaction(Transaction transaction) {
-        String sql = """
-            INSERT INTO transactions (user_id, amount, type, category_id, note, transaction_date)
-            VALUES (?, ?, ?, ?, ?, ?)
-        """;
+        String sql = "INSERT INTO transactions (user_id, amount, type, category_id, note, transaction_date) VALUES (?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = dbConfig.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             stmt.setInt(1, transaction.getUserId());
             stmt.setBigDecimal(2, transaction.getAmount());
-            stmt.setString(3, transaction.getType().toString());
+            stmt.setString(3, transaction.getType().toString()); // INCOME atau OUTCOME
             stmt.setInt(4, transaction.getCategoryId());
             stmt.setString(5, transaction.getNote());
             stmt.setDate(6, Date.valueOf(transaction.getTransactionDate()));
 
             int rowsAffected = stmt.executeUpdate();
-            return rowsAffected > 0;
+
+            if (rowsAffected > 0) {
+                // Ambil ID yang auto-generated
+                ResultSet generatedKeys = stmt.getGeneratedKeys();
+                if (generatedKeys.next()) {
+                    transaction.setTransactionId(generatedKeys.getInt(1));
+                }
+                System.out.println("Transaction saved successfully with ID: " + transaction.getTransactionId());
+                return true;
+            }
 
         } catch (SQLException e) {
             System.err.println("Error saving transaction: " + e.getMessage());
             e.printStackTrace();
-            return false;
         }
+
+        return false;
     }
 
-    // Read - Get all transactions for a user
-    public List<Transaction> getTransactionsByUserId(int userId) {
+    // READ - Ambil semua transaksi berdasarkan user
+// UPDATE TransactionDAO.java - Fix the getTransactionsByUserId method
+
+    public List<Transaction> getTransactionsByUserId(Integer userId) {
         List<Transaction> transactions = new ArrayList<>();
-        String sql = """
-            SELECT transaction_id, user_id, amount, type, category_id, note, transaction_date, created_at
-            FROM transactions 
-            WHERE user_id = ?
-            ORDER BY transaction_date DESC, created_at DESC
-        """;
+
+        // First, check if created_at column exists
+        String checkColumnSql = "SELECT column_name FROM information_schema.columns WHERE table_name = 'transactions' AND column_name = 'created_at'";
+        boolean hasCreatedAt = false;
+
+        try (Connection conn = dbConfig.getConnection();
+             PreparedStatement checkStmt = conn.prepareStatement(checkColumnSql);
+             ResultSet checkRs = checkStmt.executeQuery()) {
+
+            hasCreatedAt = checkRs.next();
+
+        } catch (SQLException e) {
+            System.err.println("Error checking column existence: " + e.getMessage());
+        }
+
+        // Use appropriate SQL based on column existence
+        String sql;
+        if (hasCreatedAt) {
+            sql = "SELECT * FROM transactions WHERE user_id = ? ORDER BY transaction_date DESC, created_at DESC";
+        } else {
+            sql = "SELECT * FROM transactions WHERE user_id = ? ORDER BY transaction_date DESC, transaction_id DESC";
+        }
 
         try (Connection conn = dbConfig.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -69,7 +94,14 @@ public class TransactionDAO {
                 transaction.setCategoryId(rs.getInt("category_id"));
                 transaction.setNote(rs.getString("note"));
                 transaction.setTransactionDate(rs.getDate("transaction_date").toLocalDate());
-                transaction.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
+
+                // Only set created_at if column exists
+                if (hasCreatedAt) {
+                    Timestamp createdAt = rs.getTimestamp("created_at");
+                    if (createdAt != null) {
+                        transaction.setCreatedAt(createdAt.toLocalDateTime());
+                    }
+                }
 
                 transactions.add(transaction);
             }
@@ -82,48 +114,9 @@ public class TransactionDAO {
         return transactions;
     }
 
-    // Read - Get transaction by ID
-    public Transaction getTransactionById(int transactionId) {
-        String sql = """
-            SELECT transaction_id, user_id, amount, type, category_id, note, transaction_date, created_at
-            FROM transactions 
-            WHERE transaction_id = ?
-        """;
-
-        try (Connection conn = dbConfig.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setInt(1, transactionId);
-            ResultSet rs = stmt.executeQuery();
-
-            if (rs.next()) {
-                Transaction transaction = new Transaction();
-                transaction.setTransactionId(rs.getInt("transaction_id"));
-                transaction.setUserId(rs.getInt("user_id"));
-                transaction.setAmount(rs.getBigDecimal("amount"));
-                transaction.setType(TransactionType.valueOf(rs.getString("type")));
-                transaction.setCategoryId(rs.getInt("category_id"));
-                transaction.setNote(rs.getString("note"));
-                transaction.setTransactionDate(rs.getDate("transaction_date").toLocalDate());
-                transaction.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
-
-                return transaction;
-            }
-
-        } catch (SQLException e) {
-            System.err.println("Error getting transaction by ID: " + e.getMessage());
-            e.printStackTrace();
-        }
-
-        return null;
-    }
-
+    // UPDATE - Update transaksi
     public boolean updateTransaction(Transaction transaction) {
-        String sql = """
-            UPDATE transactions 
-            SET amount = ?, type = ?, category_id = ?, note = ?, transaction_date = ?
-            WHERE transaction_id = ?
-        """;
+        String sql = "UPDATE transactions SET amount = ?, type = ?, category_id = ?, note = ?, transaction_date = ? WHERE transaction_id = ?";
 
         try (Connection conn = dbConfig.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -135,69 +128,71 @@ public class TransactionDAO {
             stmt.setDate(5, Date.valueOf(transaction.getTransactionDate()));
             stmt.setInt(6, transaction.getTransactionId());
 
-            int rowsAffected = stmt.executeUpdate();
-            return rowsAffected > 0;
+            return stmt.executeUpdate() > 0;
 
         } catch (SQLException e) {
             System.err.println("Error updating transaction: " + e.getMessage());
             e.printStackTrace();
-            return false;
         }
+
+        return false;
     }
 
-    public boolean deleteTransaction(int transactionId) {
+    // DELETE - Hapus transaksi
+    public boolean deleteTransaction(Integer transactionId) {
         String sql = "DELETE FROM transactions WHERE transaction_id = ?";
 
         try (Connection conn = dbConfig.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, transactionId);
-
-            int rowsAffected = stmt.executeUpdate();
-            return rowsAffected > 0;
+            return stmt.executeUpdate() > 0;
 
         } catch (SQLException e) {
             System.err.println("Error deleting transaction: " + e.getMessage());
             e.printStackTrace();
-            return false;
         }
+
+        return false;
     }
 
-    public List<Transaction> getTransactionsByType(int userId, TransactionType type) {
-        List<Transaction> transactions = new ArrayList<>();
-        String sql = """
-            SELECT transaction_id, user_id, amount, type, category_id, note, transaction_date, created_at
-            FROM transactions 
-            WHERE user_id = ? AND type = ?
-            ORDER BY transaction_date DESC, created_at DESC
-        """;
+    // STATISTICS - Total income
+    public BigDecimal getTotalIncome(Integer userId) {
+        String sql = "SELECT COALESCE(SUM(amount), 0) as total FROM transactions WHERE user_id = ? AND type = 'INCOME'";
 
         try (Connection conn = dbConfig.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, userId);
-            stmt.setString(2, type.toString());
             ResultSet rs = stmt.executeQuery();
 
-            while (rs.next()) {
-                Transaction transaction = new Transaction();
-                transaction.setTransactionId(rs.getInt("transaction_id"));
-                transaction.setUserId(rs.getInt("user_id"));
-                transaction.setAmount(rs.getBigDecimal("amount"));
-                transaction.setType(TransactionType.valueOf(rs.getString("type")));
-                transaction.setCategoryId(rs.getInt("category_id"));
-                transaction.setNote(rs.getString("note"));
-                transaction.setTransactionDate(rs.getDate("transaction_date").toLocalDate());
-                transaction.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
-
-                transactions.add(transaction);
+            if (rs.next()) {
+                return rs.getBigDecimal("total");
             }
-
         } catch (SQLException e) {
-            System.err.println("Error getting transactions by type: " + e.getMessage());
-            e.printStackTrace();
+            System.err.println("Error getting total income: " + e.getMessage());
         }
 
-        return transactions;
+        return BigDecimal.ZERO;
+    }
+
+    // STATISTICS - Total expense
+    public BigDecimal getTotalExpense(Integer userId) {
+        String sql = "SELECT COALESCE(SUM(amount), 0) as total FROM transactions WHERE user_id = ? AND type = 'OUTCOME'";
+
+        try (Connection conn = dbConfig.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, userId);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return rs.getBigDecimal("total");
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getting total expense: " + e.getMessage());
+        }
+
+        return BigDecimal.ZERO;
     }
 }
