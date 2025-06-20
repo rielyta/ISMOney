@@ -1,17 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<<<<<<< HEAD
-<?import java.lang.*?>
-<?import java.util.*?>
-<?import javafx.scene.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-
-<AnchorPane xmlns="http://javafx.com/javafx"
-            xmlns:fx="http://javafx.com/fxml"
-            prefHeight="400.0" prefWidth="600.0">
-
-=======
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
@@ -46,7 +34,7 @@
             <TextField editable="false" layoutX="486.0" layoutY="45.0" prefHeight="25.0" prefWidth="124.0" style="-fx-border-color: #63DBF3;" />
          </children>
       </Pane>
-      <Button layoutX="89.0" layoutY="212.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="151.0" style="-fx-background-color: #8c0093;" text="Saving Goal" textFill="WHITE">
+      <Button fx:id="savingGoalButton" layoutX="89.0" layoutY="212.0" mnemonicParsing="false" onAction="#handleSavingGoalButton" prefHeight="25.0" prefWidth="151.0" style="-fx-background-color: #8c0093;" text="Saving Goal" textFill="WHITE">
          <font>
             <Font name="System Bold" size="12.0" />
          </font>
@@ -62,5 +50,4 @@
          </children>
       </Pane>
    </children>
->>>>>>> edbf9160d420b1ea7d3db3ac712a29cbb9db723f
 </AnchorPane>
