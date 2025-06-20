@@ -45,9 +45,9 @@ public class TransactionFormController {
             categoryDAO = new CategoryDAO();
             userDAO = new UserDAOImpl();
 
-            // Get or create a valid user ID
-            currentUserId = getValidUserId();
-            System.out.println("Using user ID: " + currentUserId);
+            // Use the same logic as TransactionListController to get current user
+            currentUserId = getCurrentLoggedInUserId();
+            System.out.println("Using user ID for transaction form: " + currentUserId);
 
             // Setup basic controls
             typeComboBox.setItems(FXCollections.observableArrayList("Pendapatan", "Pengeluaran"));
@@ -86,11 +86,19 @@ public class TransactionFormController {
         }
     }
 
-    private Integer getValidUserId() {
+    private Integer getCurrentLoggedInUserId() {
         try {
-            // First, try to get an existing user
+            // First try to get the most recently created user (likely the logged-in one)
+            Integer latestUserId = getLatestUserId();
+            if (latestUserId != null) {
+                System.out.println("Using latest user ID: " + latestUserId);
+                return latestUserId;
+            }
+
+            // Fallback to first existing user
             Integer existingUserId = getFirstExistingUserId();
             if (existingUserId != null) {
+                System.out.println("Using first existing user ID: " + existingUserId);
                 return existingUserId;
             }
 
@@ -101,13 +109,25 @@ public class TransactionFormController {
                 return testUser.getId();
             }
 
-            // Fallback: return null and handle in save method
-            return null;
-
+            System.out.println("No users found, using default ID: 1");
+            return 1;
         } catch (Exception e) {
-            System.err.println("Error getting valid user ID: " + e.getMessage());
-            return null;
+            System.err.println("Error getting current user ID: " + e.getMessage());
+            return 1;
         }
+    }
+
+    private Integer getLatestUserId() {
+        try (Connection conn = com.example.ismoney.database.DatabaseConfig.getInstance().getConnection()) {
+            PreparedStatement stmt = conn.prepareStatement("SELECT id FROM users ORDER BY created_at DESC, id DESC LIMIT 1");
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("id");
+            }
+        } catch (Exception e) {
+            System.err.println("Error getting latest user ID: " + e.getMessage());
+        }
+        return null;
     }
 
     private Integer getFirstExistingUserId() {
@@ -245,7 +265,7 @@ public class TransactionFormController {
 
             // 3. Buat object Transaction baru
             Transaction newTransaction = new Transaction();
-            newTransaction.setUserId(currentUserId); // Use dynamic user ID
+            newTransaction.setUserId(currentUserId); // Use consistent user ID
             newTransaction.setAmount(amount);
             newTransaction.setType(type.equals("Pendapatan") ? TransactionType.INCOME : TransactionType.OUTCOME);
             newTransaction.setCategoryId(category.getCategoriesId());

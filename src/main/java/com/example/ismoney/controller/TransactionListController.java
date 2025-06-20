@@ -50,6 +50,7 @@ public class TransactionListController {
     private CategoryDAO categoryDAO;
     private ObservableList<Transaction> allTransactions;
     private Integer currentUserId;
+    private Map<Integer, Category> categoryCache = new HashMap<>(); // Cache categories to reduce DB calls
 
     @FXML
     public void initialize() {
@@ -59,14 +60,15 @@ public class TransactionListController {
             transactionDAO = new TransactionDAO();
             categoryDAO = new CategoryDAO();
 
-            // Get dynamic user ID
-            currentUserId = getValidUserId();
+            // Get the current logged-in user ID (more dynamic approach)
+            currentUserId = getCurrentLoggedInUserId();
             System.out.println("Using user ID for transaction list: " + currentUserId);
 
             setupTableColumns();
             setupFilterControls();
             setupTableSelectionListener();
             setupChart();
+            loadCategoriesCache(); // Load categories once
             loadTransactions();
             updateChart();
 
@@ -78,9 +80,77 @@ public class TransactionListController {
         }
     }
 
+    private Integer getCurrentLoggedInUserId() {
+        try {
+            // First try to get the most recently created user (likely the logged-in one)
+            Integer latestUserId = getLatestUserId();
+            if (latestUserId != null) {
+                System.out.println("Using latest user ID: " + latestUserId);
+                return latestUserId;
+            }
+
+            // Fallback to first existing user
+            Integer existingUserId = getFirstExistingUserId();
+            if (existingUserId != null) {
+                System.out.println("Using first existing user ID: " + existingUserId);
+                return existingUserId;
+            }
+
+            System.out.println("No users found, using default ID: 1");
+            return 1;
+        } catch (Exception e) {
+            System.err.println("Error getting current user ID: " + e.getMessage());
+            return 1;
+        }
+    }
+
+    private Integer getLatestUserId() {
+        try (Connection conn = com.example.ismoney.database.DatabaseConfig.getInstance().getConnection()) {
+            PreparedStatement stmt = conn.prepareStatement("SELECT id FROM users ORDER BY created_at DESC, id DESC LIMIT 1");
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("id");
+            }
+        } catch (Exception e) {
+            System.err.println("Error getting latest user ID: " + e.getMessage());
+        }
+        return null;
+    }
+
+    private Integer getFirstExistingUserId() {
+        try (Connection conn = com.example.ismoney.database.DatabaseConfig.getInstance().getConnection()) {
+            PreparedStatement stmt = conn.prepareStatement("SELECT id FROM users ORDER BY id LIMIT 1");
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("id");
+            }
+        } catch (Exception e) {
+            System.err.println("Error getting existing user ID: " + e.getMessage());
+        }
+        return null;
+    }
+
+    private void loadCategoriesCache() {
+        try {
+            List<Category> categories = categoryDAO.getAllCategories();
+            categoryCache.clear();
+            for (Category category : categories) {
+                categoryCache.put(category.getCategoriesId(), category);
+            }
+            System.out.println("Loaded " + categories.size() + " categories to cache");
+        } catch (Exception e) {
+            System.err.println("Error loading categories cache: " + e.getMessage());
+        }
+    }
+
+    private String getCategoryNameFromCache(Integer categoryId) {
+        Category category = categoryCache.get(categoryId);
+        return category != null ? category.getName() : "Unknown";
+    }
+
     private void setupChart() {
         // Configure chart appearance
-        lineChart.setTitle("Data Penjualan");
+        lineChart.setTitle("Belum Ada Data Transaksi");
         lineChart.setLegendVisible(true);
         lineChart.setCreateSymbols(true);
         lineChart.setAnimated(true);
@@ -96,32 +166,6 @@ public class TransactionListController {
         lineChart.setVerticalGridLinesVisible(false);
         lineChart.setHorizontalZeroLineVisible(false);
         lineChart.setVerticalZeroLineVisible(false);
-    }
-
-    private Integer getValidUserId() {
-        try {
-            Integer existingUserId = getFirstExistingUserId();
-            if (existingUserId != null) {
-                return existingUserId;
-            }
-            return 1;
-        } catch (Exception e) {
-            System.err.println("Error getting valid user ID: " + e.getMessage());
-            return 1;
-        }
-    }
-
-    private Integer getFirstExistingUserId() {
-        try (Connection conn = com.example.ismoney.database.DatabaseConfig.getInstance().getConnection()) {
-            PreparedStatement stmt = conn.prepareStatement("SELECT id FROM users ORDER BY id LIMIT 1");
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                return rs.getInt("id");
-            }
-        } catch (Exception e) {
-            System.err.println("Error getting existing user ID: " + e.getMessage());
-        }
-        return null;
     }
 
     private void setupTableColumns() {
@@ -145,15 +189,9 @@ public class TransactionListController {
             return new javafx.beans.property.SimpleObjectProperty<>(null);
         });
 
-        categoryColumn.setCellValueFactory(cellData -> {
-            try {
-                Category category = categoryDAO.getCategoryById(cellData.getValue().getCategoryId());
-                return new SimpleStringProperty(category != null ? category.getName() : "Unknown");
-            } catch (Exception e) {
-                System.err.println("Error getting category: " + e.getMessage());
-                return new SimpleStringProperty("Unknown");
-            }
-        });
+        // Use cached categories instead of DB calls for each row
+        categoryColumn.setCellValueFactory(cellData ->
+                new SimpleStringProperty(getCategoryNameFromCache(cellData.getValue().getCategoryId())));
 
         totalColumn.setCellValueFactory(new PropertyValueFactory<>("amount"));
         formatCurrencyColumns();
@@ -227,17 +265,22 @@ public class TransactionListController {
 
             System.out.println("Loaded " + transactions.size() + " transactions");
 
-            for (Transaction t : transactions) {
-                System.out.println("Transaction: ID=" + t.getTransactionId() +
-                        ", Amount=" + t.getAmount() +
-                        ", Type=" + t.getType() +
-                        ", Category=" + t.getCategoryId() +
-                        ", Date=" + t.getTransactionDate());
-            }
-
             if (transactions.isEmpty()) {
                 System.out.println("No transactions found for user ID " + currentUserId);
                 checkAllTransactions();
+            } else {
+                // Only print first few transactions to avoid spam
+                for (int i = 0; i < Math.min(3, transactions.size()); i++) {
+                    Transaction t = transactions.get(i);
+                    System.out.println("Transaction " + (i+1) + ": ID=" + t.getTransactionId() +
+                            ", Amount=" + t.getAmount() +
+                            ", Type=" + t.getType() +
+                            ", Category=" + t.getCategoryId() +
+                            ", Date=" + t.getTransactionDate());
+                }
+                if (transactions.size() > 3) {
+                    System.out.println("... and " + (transactions.size() - 3) + " more transactions");
+                }
             }
 
         } catch (Exception e) {
@@ -249,7 +292,7 @@ public class TransactionListController {
 
     private void checkAllTransactions() {
         try (Connection conn = com.example.ismoney.database.DatabaseConfig.getInstance().getConnection()) {
-            PreparedStatement stmt = conn.prepareStatement("SELECT user_id, COUNT(*) as count FROM transactions GROUP BY user_id");
+            PreparedStatement stmt = conn.prepareStatement("SELECT user_id, COUNT(*) as count FROM transactions GROUP BY user_id ORDER BY user_id");
             ResultSet rs = stmt.executeQuery();
 
             System.out.println("=== All transactions by user ID ===");
@@ -272,7 +315,7 @@ public class TransactionListController {
         try {
             if (allTransactions == null || allTransactions.isEmpty()) {
                 lineChart.getData().clear();
-                createSampleChart(); // Create sample chart when no data
+                lineChart.setTitle("Belum Ada Data Transaksi");
                 return;
             }
 
@@ -305,6 +348,9 @@ public class TransactionListController {
                             Collectors.reducing(BigDecimal.ZERO, Transaction::getAmount, BigDecimal::add)
                     ));
 
+            // Change title back to normal when data exists
+            lineChart.setTitle("Data Transaksi");
+
             // Create series
             XYChart.Series<String, Number> incomeSeries = new XYChart.Series<>();
             incomeSeries.setName("Pemasukan");
@@ -333,30 +379,7 @@ public class TransactionListController {
         }
     }
 
-    private void createSampleChart() {
-        // Create sample data for demonstration
-        String[] months = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
-
-        XYChart.Series<String, Number> series2020 = new XYChart.Series<>();
-        series2020.setName("2020");
-
-        XYChart.Series<String, Number> series2021 = new XYChart.Series<>();
-        series2021.setName("2021");
-
-        // Sample data points similar to the image
-        double[] data2020 = {1000, 1200, 800, 1500, 900, 1100, 1300, 1000, 1400, 1200, 1600, 1800};
-        double[] data2021 = {1100, 900, 1300, 1100, 1400, 1600, 1200, 1500, 1800, 1400, 2100, 2000};
-
-        for (int i = 0; i < months.length; i++) {
-            series2020.getData().add(new XYChart.Data<>(months[i], data2020[i]));
-            series2021.getData().add(new XYChart.Data<>(months[i], data2021[i]));
-        }
-
-        lineChart.getData().clear();
-        lineChart.getData().addAll(series2020, series2021);
-
-        styleChartLines();
-    }
+    // Remove the createSampleChart method since we don't need it anymore
 
     private void styleChartLines() {
         // Apply styling after chart is rendered
@@ -376,10 +399,7 @@ public class TransactionListController {
 
     @FXML
     private void handleFilter() {
-        System.out.println("Filter button clicked!");
-
         if (allTransactions == null || allTransactions.isEmpty()) {
-            System.out.println("No transactions to filter");
             return;
         }
 
@@ -397,18 +417,12 @@ public class TransactionListController {
                         }
                     }
 
-                    // Filter berdasarkan pencarian
+                    // Filter berdasarkan pencarian (using cache)
                     if (!searchText.isEmpty()) {
-                        try {
-                            Category category = categoryDAO.getCategoryById(transaction.getCategoryId());
-                            String categoryName = category != null ? category.getName().toLowerCase() : "";
-                            String note = transaction.getNote() != null ? transaction.getNote().toLowerCase() : "";
+                        String categoryName = getCategoryNameFromCache(transaction.getCategoryId()).toLowerCase();
+                        String note = transaction.getNote() != null ? transaction.getNote().toLowerCase() : "";
 
-                            if (!categoryName.contains(searchText) && !note.contains(searchText)) {
-                                return false;
-                            }
-                        } catch (Exception e) {
-                            System.err.println("Error filtering transaction: " + e.getMessage());
+                        if (!categoryName.contains(searchText) && !note.contains(searchText)) {
                             return false;
                         }
                     }
@@ -418,12 +432,10 @@ public class TransactionListController {
                 .collect(Collectors.toList());
 
         transactionTable.setItems(FXCollections.observableArrayList(filteredTransactions));
-        System.out.println("Filtered to " + filteredTransactions.size() + " transactions");
     }
 
     @FXML
     private void handleAddTransaction() {
-        System.out.println("Add Transaction button clicked!");
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/ismoney/Transaction/TransactionForm.fxml"));
             Parent root = loader.load();
@@ -447,7 +459,6 @@ public class TransactionListController {
 
     @FXML
     private void handleEdit() {
-        System.out.println("Edit button clicked!");
         Transaction selectedTransaction = transactionTable.getSelectionModel().getSelectedItem();
         if (selectedTransaction != null) {
             try {
@@ -477,7 +488,6 @@ public class TransactionListController {
 
     @FXML
     private void handleDelete() {
-        System.out.println("Delete button clicked!");
         Transaction selectedTransaction = transactionTable.getSelectionModel().getSelectedItem();
         if (selectedTransaction != null) {
             Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
