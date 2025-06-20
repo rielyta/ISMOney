@@ -1,38 +1,80 @@
 package com.example.ismoney.model.user;
 
-import com.example.ismoney.dao.UserDAO;
-import com.example.ismoney.database.DatabaseConfig;
+import java.sql.Timestamp;
 
 public class User {
-
+    private int id;
+    private String username;
     private String email;
-    private String password;
+    private String passwordHash;
+    private Timestamp createdAt;
+    private Timestamp lastLogin;
 
-    public User(String email, String password) {
+    public User(String username, String email, String passwordHash) {
+        this.username = username;
         this.email = email;
-        this.password = password;
+        this.passwordHash = passwordHash;
     }
 
-    // Provide getters to allow subclasses to view
+    public User() {}
+
+    // Getters and Setters
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
     public String getEmail() {
         return email;
     }
-    public String getPassword() { return password; }
 
-    public boolean signUp() {
-        UserDAO dao = new UserDAO();
-        return dao.insertUser(this.email, this.password);
+    public void setEmail(String email) {
+        this.email = email;
     }
 
-    // Declare login() here, even if it's not implemented in User
-    public boolean login() {
-        // Default implementation (Username/Pass)
-        UserDAO dao = new UserDAO();
-        return dao.checkCredentials(this.email, this.password);
+    public String getPasswordHash() {
+        return passwordHash;
     }
 
-    public boolean checkCredentials() {
-        DatabaseConfig db = DatabaseConfig.getInstance();
-        return db.checkCredentials(this.email, this.password);
+    public void setPasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
+    }
+
+    public Timestamp getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Timestamp createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Timestamp getLastLogin() {
+        return lastLogin;
+    }
+
+    public void setLastLogin(Timestamp lastLogin) {
+        this.lastLogin = lastLogin;
+    }
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "id=" + id +
+                ", username='" + username + '\'' +
+                ", email='" + email + '\'' +
+                ", createdAt=" + createdAt +
+                ", lastLogin=" + lastLogin +
+                '}';
     }
 }

@@ -34,7 +34,7 @@
             <TextField editable="false" layoutX="486.0" layoutY="45.0" prefHeight="25.0" prefWidth="124.0" style="-fx-border-color: #63DBF3;" />
          </children>
       </Pane>
-      <Button fx:id="savingGoalButton" layoutX="89.0" layoutY="212.0" mnemonicParsing="false" onAction="#handlesavingGoalButton" prefHeight="25.0" prefWidth="151.0" style="-fx-background-color: #8c0093;" text="Saving Goal" textFill="WHITE">
+      <Button fx:id="savingGoalButton" layoutX="89.0" layoutY="212.0" mnemonicParsing="false" onAction="#handleSavingGoalButton" prefHeight="25.0" prefWidth="151.0" style="-fx-background-color: #8c0093;" text="Saving Goal" textFill="WHITE">
          <font>
             <Font name="System Bold" size="12.0" />
          </font>

@@ -8,6 +8,7 @@ module com.example.ismoney {
 
     // PostgreSQL driver
     requires org.postgresql.jdbc;
+    requires jbcrypt;
 
     // Export packages
     exports com.example.ismoney;
