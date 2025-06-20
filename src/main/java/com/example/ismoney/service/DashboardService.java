@@ -81,14 +81,14 @@ public class DashboardService {
                 .filter(t -> "expense".equals(t.getType()))
                 .collect(Collectors.groupingBy(
                         Transaction::getCategory,
-                        Collectors.summingDouble(Transaction::getAmount)
+                        Collectors.summingDouble(t -> t.getAmount().doubleValue())
                 ));
 
         Map<String, Double> incomeByCategory = monthlyTransactions.stream()
                 .filter(t -> "income".equals(t.getType()))
                 .collect(Collectors.groupingBy(
                         Transaction::getCategory,
-                        Collectors.summingDouble(Transaction::getAmount)
+                        Collectors.summingDouble(t -> t.getAmount().doubleValue())
                 ));
 
         // Get budget performance
@@ -147,12 +147,12 @@ public class DashboardService {
 
         // Populate with actual transaction data
         for (Transaction transaction : transactions) {
-            DailyFinancialData data = dailyData.get(transaction.getDate());
+            DailyFinancialData data = dailyData.get(transaction.getTransactionDate());
             if (data != null) {
                 if ("income".equals(transaction.getType())) {
-                    balance += transaction.getAmount().doubleValue();
+                    data.income += transaction.getAmount().doubleValue();
                 } else if ("expense".equals(transaction.getType())) {
-                    balance += transaction.getAmount().doubleValue();
+                    data.expense += transaction.getAmount().doubleValue();
                 }
             }
         }
