@@ -1,4 +1,3 @@
-// Budget.java
 package com.example.ismoney.model;
 
 import java.time.LocalDate;

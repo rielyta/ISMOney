@@ -224,4 +224,21 @@ public class UserDAOImpl implements UserDAO {
                 username.length() <= 20 &&
                 username.matches("^[a-zA-Z0-9_]+$");
     }
+
+    public User getUserById(Integer userId) throws SQLException {
+        String sql = "SELECT * FROM users WHERE id = ?";
+
+        try (Connection conn = DatabaseConfig.getInstance().getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, userId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToUser(rs);
+                }
+            }
+        }
+        return null;
+    }
 }

@@ -1,12 +1,12 @@
 package com.example.ismoney.controller;
 
-import com.example.ismoney.dao.CategoryDAO;
-import com.example.ismoney.dao.SavingGoalDAO;
-import com.example.ismoney.dao.TransactionDAO;
+import com.example.ismoney.dao.*;
 import com.example.ismoney.model.SavingGoal;
 import com.example.ismoney.model.Transaction;
 import com.example.ismoney.model.TransactionType;
+import com.example.ismoney.model.User;
 import com.example.ismoney.util.SceneSwitcher;
+import com.example.ismoney.util.UserSession;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -22,21 +22,19 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 
 import java.math.BigDecimal;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class DashboardController {
 
     @FXML private Button transactionButton;
     @FXML private Button GoalsListButton;
-    @FXML private Button budgetButton;  // Added budget button FXML
+    @FXML private Button budgetButton;
     @FXML private Button logOutBtn;
 
     // FXML fields untuk ringkasan keuangan
@@ -55,23 +53,33 @@ public class DashboardController {
     private TransactionDAO transactionDAO;
     private SavingGoalDAO savingGoalDAO;
     private CategoryDAO categoryDAO;
+    private UserDAOImpl userDAO;
     private Integer currentUserId;
+    private User currentUser;
     private Map<Integer, String> categoryCache = new HashMap<>();
 
     // Auto refresh components
     private Timeline autoRefreshTimeline;
-    private static final int REFRESH_INTERVAL_SECONDS = 30; // Refresh setiap 30 detik
+    private static final int REFRESH_INTERVAL_SECONDS = 30;
     private LocalDateTime lastRefreshTime;
-    private Label lastUpdateLabel;
 
     @FXML
     public void initialize() {
         try {
+            // Initialize DAOs
             transactionDAO = new TransactionDAO();
             savingGoalDAO = new SavingGoalDAO();
             categoryDAO = new CategoryDAO();
+            userDAO = new UserDAOImpl();
 
-            currentUserId = getCurrentLoggedInUserId();
+            // Get current user from session
+            if (!initializeCurrentUser()) {
+                showAlert("Error", "Tidak dapat mengidentifikasi user yang sedang login. Silakan login kembali.");
+                handleLogoutButton();
+                return;
+            }
+
+            // Setup components
             loadCategoriesCache();
             setupActivityLogTable();
             setupDatePicker();
@@ -80,14 +88,38 @@ public class DashboardController {
             // Initial load
             refreshDashboard();
 
+            System.out.println("Dashboard initialized for user: " + currentUser.getUsername() + " (ID: " + currentUserId + ")");
+
         } catch (Exception e) {
             showAlert("Kesalahan", "Gagal menginisialisasi dashboard: " + e.getMessage());
             e.printStackTrace();
         }
     }
 
+    private boolean initializeCurrentUser() {
+        try {
+            // Method 1: Get from UserSession (recommended approach)
+            currentUserId = UserSession.getCurrentUserId();
+            if (currentUserId != null) {
+                currentUser = userDAO.getUserById(currentUserId);
+                if (currentUser != null) {
+                    System.out.println("User loaded from session: " + currentUser.getUsername());
+                    return true;
+                }
+            }
+
+            // Method 2: Fallback - redirect to login if no session
+            System.out.println("No valid user session found. Redirecting to login.");
+            return false;
+
+        } catch (Exception e) {
+            System.err.println("Error initializing current user: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     private void setupAutoRefresh() {
-        // Create auto refresh timeline
         autoRefreshTimeline = new Timeline(
                 new KeyFrame(Duration.seconds(REFRESH_INTERVAL_SECONDS), e -> {
                     Platform.runLater(this::refreshDashboard);
@@ -96,12 +128,19 @@ public class DashboardController {
         autoRefreshTimeline.setCycleCount(Animation.INDEFINITE);
         autoRefreshTimeline.play();
 
-        System.out.println("Auto refresh enabled - refreshing every " + REFRESH_INTERVAL_SECONDS + " seconds");
+        System.out.println("Auto refresh enabled for user " + currentUserId + " - refreshing every " + REFRESH_INTERVAL_SECONDS + " seconds");
     }
 
     private void refreshDashboard() {
         try {
-            System.out.println("Refreshing dashboard data...");
+            // Verify user session is still valid
+            if (currentUserId == null || !UserSession.isSessionValid()) {
+                System.out.println("Invalid session detected. Logging out...");
+                handleLogoutButton();
+                return;
+            }
+
+            System.out.println("Refreshing dashboard data for user ID: " + currentUserId);
 
             // Refresh data
             loadCategoriesCache();
@@ -206,15 +245,9 @@ public class DashboardController {
                 selectedDate = LocalDate.now();
             }
 
-            System.out.println("Loading financial summary for user ID: " + currentUserId +
-                    ", Year: " + selectedDate.getYear() +
-                    ", Month: " + selectedDate.getMonthValue());
-
             // Get transactions for selected month
             List<Transaction> monthlyTransactions = transactionDAO.getTransactionsByUserIdAndMonth(
                     currentUserId, selectedDate.getYear(), selectedDate.getMonthValue());
-
-            System.out.println("Found " + monthlyTransactions.size() + " transactions");
 
             BigDecimal totalIncome = BigDecimal.ZERO;
             BigDecimal totalExpense = BigDecimal.ZERO;
@@ -229,41 +262,38 @@ public class DashboardController {
 
             BigDecimal totalBalance = totalIncome.subtract(totalExpense);
 
+            // Update UI fields
             totalIncomeField.setText("Rp " + String.format("%,.0f", totalIncome.doubleValue()));
             totalExpenseField.setText("Rp " + String.format("%,.0f", totalExpense.doubleValue()));
             totalBalanceField.setText("Rp " + String.format("%,.0f", totalBalance.doubleValue()));
 
             // Set text color for balance
             if (totalBalance.compareTo(BigDecimal.ZERO) >= 0) {
-                totalBalanceField.setStyle("-fx-text-fill: green; -fx-font-weight: bold; -fx-border-color: #3498db; -fx-border-radius: 5; -fx-background-color: #f8f9fa;");
+                totalBalanceField.setStyle("-fx-text-fill: green; -fx-font-weight: bold;");
             } else {
-                totalBalanceField.setStyle("-fx-text-fill: red; -fx-font-weight: bold; -fx-border-color: #3498db; -fx-border-radius: 5; -fx-background-color: #f8f9fa;");
+                totalBalanceField.setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
             }
 
         } catch (Exception e) {
             System.err.println("Error loading financial summary: " + e.getMessage());
             e.printStackTrace();
-
-            // Set default values jika ada error
-            totalIncomeField.setText("Rp 0");
-            totalExpenseField.setText("Rp 0");
-            totalBalanceField.setText("Rp 0");
-
-            showAlert("Error", "Gagal memuat ringkasan keuangan: " + e.getMessage());
         }
     }
 
     private void loadActivityLog() {
         try {
             ObservableList<ActivityLog> activityLogs = FXCollections.observableArrayList();
-            LocalDate selectedDate = filterDatePicker.getValue();
-            if (selectedDate == null) {
-                selectedDate = LocalDate.now();
-            }
 
-            // Load recent transactions (last 10 transactions)
-            List<Transaction> recentTransactions = transactionDAO.getRecentTransactionsByUserId(currentUserId, 10);
+            // Load recent transactions - ONLY for current user
+            List<Transaction> recentTransactions = transactionDAO.getRecentTransactionsByUserId(currentUserId, 8);
             for (Transaction transaction : recentTransactions) {
+                // Double check user ownership
+                if (!Objects.equals(transaction.getUserId(), currentUserId)) {
+                    System.err.println("Warning: Skipping transaction " + transaction.getTransactionId() +
+                            " - does not belong to current user " + currentUserId);
+                    continue;
+                }
+
                 String categoryName = categoryCache.getOrDefault(transaction.getCategoryId(), "Unknown");
                 String type = transaction.getType() == TransactionType.INCOME ? "PEMASUKAN" : "PENGELUARAN";
                 String description = categoryName;
@@ -280,16 +310,56 @@ public class DashboardController {
                 activityLogs.add(log);
             }
 
-            // Load recent saving goals activities
+            // Load recent saving goals activities - ONLY for current user
             try {
-                List<SavingGoal> recentGoals = savingGoalDAO.getRecentUpdatedGoals(5);
+                List<SavingGoal> recentGoals = savingGoalDAO.getRecentUpdatedGoalsByUserId(currentUserId, 5);
                 for (SavingGoal goal : recentGoals) {
+                    // Double check user ownership
+                    if (!Objects.equals(goal.getUserId(), currentUserId)) {
+                        System.err.println("Warning: Skipping saving goal " + goal.getGoalId() +
+                                " - does not belong to current user " + currentUserId);
+                        continue;
+                    }
+
+                    // Only show goals with actual savings (current_amount > 0)
                     if (goal.getCurrentAmount().compareTo(BigDecimal.ZERO) > 0) {
+                        // Calculate progress percentage
+                        double progressPercentage = 0.0;
+                        if (goal.getTargetAmount().compareTo(BigDecimal.ZERO) > 0) {
+                            progressPercentage = goal.getCurrentAmount()
+                                    .divide(goal.getTargetAmount(), 4, BigDecimal.ROUND_HALF_UP)
+                                    .multiply(BigDecimal.valueOf(100))
+                                    .doubleValue();
+                        }
+
+                        // Create description with goal name, progress, and target
+                        String goalDescription = String.format("Goal: %s (%.1f%% dari target Rp %,.0f)",
+                                goal.getGoalName(),
+                                progressPercentage,
+                                goal.getTargetAmount().doubleValue());
+
+                        // Add status indicator
+                        String statusIndicator = "";
+                        switch (goal.getStatus()) {
+                            case "ACTIVE":
+                                statusIndicator = " [Aktif]";
+                                break;
+                            case "COMPLETED":
+                                statusIndicator = " [Selesai]";
+                                break;
+                            case "PAUSED":
+                                statusIndicator = " [Dijeda]";
+                                break;
+                            case "CANCELLED":
+                                statusIndicator = " [Dibatal]";
+                                break;
+                        }
+                        goalDescription += statusIndicator;
+
                         ActivityLog log = new ActivityLog(
                                 goal.getCreatedDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
                                 "TABUNGAN",
-                                "Tabungan: " + goal.getGoalName() + " (" +
-                                        String.format("%.1f%%", goal.getProgressPercentage()) + ")",
+                                goalDescription,
                                 "Rp " + String.format("%,.0f", goal.getCurrentAmount().doubleValue())
                         );
                         activityLogs.add(log);
@@ -297,6 +367,7 @@ public class DashboardController {
                 }
             } catch (Exception e) {
                 System.err.println("Error loading saving goals for activity log: " + e.getMessage());
+                e.printStackTrace();
             }
 
             // Sort by date (newest first)
@@ -305,16 +376,28 @@ public class DashboardController {
                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
                     LocalDate dateA = LocalDate.parse(a.getDate(), formatter);
                     LocalDate dateB = LocalDate.parse(b.getDate(), formatter);
-                    return dateB.compareTo(dateA); // newest first
+                    return dateB.compareTo(dateA);
                 } catch (Exception e) {
-                    return b.getDate().compareTo(a.getDate()); // fallback to string comparison
+                    return b.getDate().compareTo(a.getDate());
                 }
             });
 
+            // Limit to top 15 items for better performance and make it final
+            final ObservableList<ActivityLog> finalActivityLogs;
+            if (activityLogs.size() > 15) {
+                finalActivityLogs = FXCollections.observableArrayList(activityLogs.subList(0, 15));
+            } else {
+                finalActivityLogs = activityLogs;
+            }
+
             // Update table di UI thread
             Platform.runLater(() -> {
-                activityLogTable.setItems(activityLogs);
+                activityLogTable.setItems(finalActivityLogs);
             });
+
+            System.out.println("Loaded " + finalActivityLogs.size() + " activity logs for user " + currentUserId +
+                    " (Transactions: " + recentTransactions.size() + ", Goals: " +
+                    (finalActivityLogs.size() - recentTransactions.size()) + ")");
 
         } catch (Exception e) {
             System.err.println("Error loading activity log: " + e.getMessage());
@@ -325,94 +408,13 @@ public class DashboardController {
     private void loadCategoriesCache() {
         try {
             categoryCache.clear();
+            // Load all categories (categories are typically shared across users)
             categoryDAO.getAllCategories().forEach(category ->
                     categoryCache.put(category.getCategoriesId(), category.getName())
             );
         } catch (Exception e) {
             System.err.println("Error loading categories cache: " + e.getMessage());
         }
-    }
-
-    // Method untuk manual refresh (bisa dipanggil dari button atau keyboard shortcut)
-    @FXML
-    private void handleManualRefresh() {
-        System.out.println("Manual refresh triggered");
-        refreshDashboard();
-    }
-
-    // Method untuk toggle auto refresh
-    public void toggleAutoRefresh() {
-        if (autoRefreshTimeline != null) {
-            if (autoRefreshTimeline.getStatus() == Animation.Status.RUNNING) {
-                autoRefreshTimeline.stop();
-                System.out.println("Auto refresh stopped");
-            } else {
-                autoRefreshTimeline.play();
-                System.out.println("Auto refresh started");
-            }
-        }
-    }
-
-    // Method untuk mengubah interval refresh
-    public void setRefreshInterval(int seconds) {
-        if (autoRefreshTimeline != null) {
-            autoRefreshTimeline.stop();
-        }
-
-        autoRefreshTimeline = new Timeline(
-                new KeyFrame(Duration.seconds(seconds), e -> {
-                    Platform.runLater(this::refreshDashboard);
-                })
-        );
-        autoRefreshTimeline.setCycleCount(Animation.INDEFINITE);
-        autoRefreshTimeline.play();
-
-        System.out.println("Refresh interval changed to " + seconds + " seconds");
-    }
-
-    private Integer getCurrentLoggedInUserId() {
-        try {
-            Integer latestUserId = getLatestUserId();
-            if (latestUserId != null) {
-                return latestUserId;
-            }
-
-            Integer existingUserId = getFirstExistingUserId();
-            if (existingUserId != null) {
-                return existingUserId;
-            }
-
-            return 1; // Default user ID
-        } catch (Exception e) {
-            System.err.println("Error getting current user ID: " + e.getMessage());
-            return 1;
-        }
-    }
-
-    private Integer getLatestUserId() {
-        try (Connection conn = com.example.ismoney.database.DatabaseConfig.getInstance().getConnection()) {
-            PreparedStatement stmt = conn.prepareStatement("SELECT id FROM users ORDER BY created_at DESC, id DESC LIMIT 1");
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                return rs.getInt("id");
-            }
-        } catch (Exception e) {
-            System.err.println("Error getting latest user ID: " + e.getMessage());
-        }
-        return null;
-    }
-
-    private Integer getFirstExistingUserId() {
-        try (Connection conn = com.example.ismoney.database.DatabaseConfig.getInstance().getConnection()) {
-            PreparedStatement stmt = conn.prepareStatement("SELECT id FROM users ORDER BY id LIMIT 1");
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                return rs.getInt("id");
-            }
-        } catch (Exception e) {
-            System.err.println("Error getting existing user ID: " + e.getMessage());
-        }
-        return null;
     }
 
     @FXML
@@ -439,7 +441,6 @@ public class DashboardController {
     private void handleBudgetButton(ActionEvent event) {
         try {
             SceneSwitcher.switchTo("Budget/BudgetList.fxml", (Stage) budgetButton.getScene().getWindow());
-
         } catch (Exception e) {
             showAlert("Kesalahan", "Terjadi kesalahan tidak terduga: " + e.getMessage());
             e.printStackTrace();
@@ -448,13 +449,29 @@ public class DashboardController {
 
     @FXML
     private void handleLogoutButton() {
-        // Stop auto refresh before logout
-        if (autoRefreshTimeline != null) {
-            autoRefreshTimeline.stop();
-        }
+        try {
+            // Stop auto refresh before logout
+            if (autoRefreshTimeline != null) {
+                autoRefreshTimeline.stop();
+            }
 
-        Stage currentStage = (Stage) logOutBtn.getScene().getWindow();
-        SceneSwitcher.logout(currentStage, "/com/example/ismoney/Login.fxml");
+            // Clear user session
+            UserSession.clearSession();
+
+            // Clear current user data
+            currentUserId = null;
+            currentUser = null;
+            categoryCache.clear();
+
+            System.out.println("User logged out successfully");
+
+            Stage currentStage = (Stage) logOutBtn.getScene().getWindow();
+            SceneSwitcher.logout(currentStage, "/com/example/ismoney/Login.fxml");
+
+        } catch (Exception e) {
+            System.err.println("Error during logout: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     private void showAlert(String title, String message) {
@@ -465,6 +482,13 @@ public class DashboardController {
             alert.setContentText(message);
             alert.showAndWait();
         });
+    }
+
+    // Clean up resources when controller is destroyed
+    public void cleanup() {
+        if (autoRefreshTimeline != null) {
+            autoRefreshTimeline.stop();
+        }
     }
 
     public static class ActivityLog {
@@ -485,6 +509,9 @@ public class DashboardController {
 
         public String getType() { return type.get(); }
         public void setType(String type) { this.type.set(type); }
+
+        public String getDescription() { return description.get(); }
+        public void setDescription(String description) { this.description.set(description); }
 
         public String getAmount() { return amount.get(); }
         public void setAmount(String amount) { this.amount.set(amount); }

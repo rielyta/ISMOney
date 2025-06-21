@@ -1,4 +1,3 @@
-// BudgetDAO.java
 package com.example.ismoney.dao;
 
 import com.example.ismoney.database.DatabaseConfig;

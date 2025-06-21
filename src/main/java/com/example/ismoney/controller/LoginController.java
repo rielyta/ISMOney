@@ -4,6 +4,9 @@ import com.example.ismoney.dao.UserDAO;
 import com.example.ismoney.dao.UserDAOImpl;
 import com.example.ismoney.model.User;
 import com.example.ismoney.util.SceneSwitcher;
+import com.example.ismoney.util.UserSession;
+import javafx.application.Platform;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -16,7 +19,10 @@ import java.util.logging.Logger;
 public class LoginController {
     private static final Logger logger = Logger.getLogger(LoginController.class.getName());
     private static final int MAX_LOGIN_ATTEMPTS = 3;
+    private static final int LOCKOUT_DURATION_SECONDS = 30;
+
     private int loginAttempts = 0;
+    private boolean isLockedOut = false;
 
     @FXML
     private TextField emailOrUsernameField;
@@ -34,114 +40,278 @@ public class LoginController {
     private final UserDAO userDAO = new UserDAOImpl();
 
     @FXML
+    public void initialize() {
+        // Clear any existing session when login page loads
+        UserSession.clearSession();
+
+        // Clear system property as well (for backward compatibility)
+        System.clearProperty("current.user.id");
+
+        // Reset login attempts and lockout state
+        loginAttempts = 0;
+        isLockedOut = false;
+
+        // Hide messages initially
+        hideMessages();
+
+        logger.info("Login page initialized, all sessions cleared");
+    }
+
+    @FXML
     protected void onLogin() {
+        // Prevent login if locked out
+        if (isLockedOut) {
+            showError("Akun terkunci. Silakan tunggu beberapa saat sebelum mencoba lagi.");
+            return;
+        }
+
         hideMessages();
         setButtonState(false);
 
         try {
-            if (loginAttempts >= MAX_LOGIN_ATTEMPTS) {
-                showError("Terlalu banyak percobaan login. Silakan tunggu beberapa saat.");
-                return;
-            }
-
+            // Validate input
             String emailOrUsername = emailOrUsernameField.getText();
             String password = passwordField.getText();
 
-            if (emailOrUsername == null || emailOrUsername.trim().isEmpty() ||
-                    password == null || password.isEmpty()) {
-                showError("Email/Username dan password wajib diisi.");
-                loginAttempts++;
+            if (!validateInput(emailOrUsername, password)) {
                 return;
             }
 
+            // Perform authentication
             User authenticatedUser = userDAO.authenticateUser(emailOrUsername.trim(), password);
 
             if (authenticatedUser == null) {
-                loginAttempts++;
-                showError("Email/Username atau password salah. Percobaan: " + loginAttempts + "/" + MAX_LOGIN_ATTEMPTS);
-
-                if (loginAttempts >= MAX_LOGIN_ATTEMPTS) {
-                    setButtonState(false);
-                    javafx.concurrent.Task<Void> resetTask = new javafx.concurrent.Task<Void>() {
-                        @Override
-                        protected Void call() throws Exception {
-                            Thread.sleep(30000);
-                            return null;
-                        }
-
-                        @Override
-                        protected void succeeded() {
-                            loginAttempts = 0;
-                            setButtonState(true);
-                        }
-                    };
-                    new Thread(resetTask).start();
-                }
+                handleFailedLogin();
                 return;
             }
 
-            userDAO.updateLastLogin(authenticatedUser.getId());
-            System.setProperty("current.user.id", String.valueOf(authenticatedUser.getId()));
-            showSuccess("Login berhasil!");
-
-            loginAttempts = 0;
-
-            passwordField.clear();
-
-            javafx.concurrent.Task<Void> task = new javafx.concurrent.Task<Void>() {
-                @Override
-                protected Void call() throws Exception {
-                    Thread.sleep(1000);
-                    return null;
-                }
-
-                @Override
-                protected void succeeded() {
-                    try {
-                        SceneSwitcher.switchTo("Dashboard.fxml", (Stage) loginButton.getScene().getWindow());
-                    } catch (Exception e) {
-                        logger.severe("Error switching to dashboard: " + e.getMessage());
-                        showError("Gagal mengalihkan ke dashboard: " + e.getMessage());
-                        setButtonState(true);
-                    }
-                }
-            };
-
-            new Thread(task).start();
+            // Login successful
+            handleSuccessfulLogin(authenticatedUser);
 
         } catch (Exception e) {
             logger.severe("Error during login: " + e.getMessage());
             showError("Terjadi kesalahan sistem. Silakan coba lagi.");
+            e.printStackTrace();
         } finally {
-            if (loginAttempts < MAX_LOGIN_ATTEMPTS) {
+            if (!isLockedOut) {
                 setButtonState(true);
             }
         }
     }
 
+    private boolean validateInput(String emailOrUsername, String password) {
+        if (emailOrUsername == null || emailOrUsername.trim().isEmpty()) {
+            showError("Email/Username wajib diisi.");
+            loginAttempts++;
+            setButtonState(true);
+            return false;
+        }
+
+        if (password == null || password.isEmpty()) {
+            showError("Password wajib diisi.");
+            loginAttempts++;
+            setButtonState(true);
+            return false;
+        }
+
+        // Check if input is too long (prevent potential security issues)
+        if (emailOrUsername.length() > 255 || password.length() > 255) {
+            showError("Input terlalu panjang.");
+            loginAttempts++;
+            setButtonState(true);
+            return false;
+        }
+
+        return true;
+    }
+
+    private void handleFailedLogin() {
+        loginAttempts++;
+
+        String errorMsg = "Email/Username atau password salah. " +
+                "Percobaan: " + loginAttempts + "/" + MAX_LOGIN_ATTEMPTS;
+
+        if (loginAttempts >= MAX_LOGIN_ATTEMPTS) {
+            initiateAccountLockout();
+            errorMsg = "Terlalu banyak percobaan login gagal. Akun dikunci selama " +
+                    LOCKOUT_DURATION_SECONDS + " detik.";
+        }
+
+        showError(errorMsg);
+
+        if (!isLockedOut) {
+            setButtonState(true);
+        }
+
+        logger.warning("Failed login attempt " + loginAttempts + " for user: " +
+                emailOrUsernameField.getText());
+    }
+
+    private void handleSuccessfulLogin(User authenticatedUser) {
+        try {
+            // Update last login time in database
+            userDAO.updateLastLogin(authenticatedUser.getId());
+
+            // Create user session
+            UserSession.setUserSession(authenticatedUser.getId(), authenticatedUser.getUsername());
+
+            // Set system property for backward compatibility
+            System.setProperty("current.user.id", String.valueOf(authenticatedUser.getId()));
+
+            // Reset login attempts
+            loginAttempts = 0;
+            isLockedOut = false;
+
+            // Show success message
+            showSuccess("Login berhasil! Selamat datang, " + authenticatedUser.getUsername() + "!");
+
+            // Clear password field for security
+            passwordField.clear();
+
+            // Log successful login
+            logger.info("User logged in successfully: " + authenticatedUser.getUsername() +
+                    " (ID: " + authenticatedUser.getId() + ")");
+
+            // Navigate to dashboard after short delay
+            navigateToDashboard();
+
+        } catch (Exception e) {
+            logger.severe("Error during successful login handling: " + e.getMessage());
+            showError("Login berhasil tetapi terjadi kesalahan. Silakan coba lagi.");
+            e.printStackTrace();
+            setButtonState(true);
+        }
+    }
+
+    private void navigateToDashboard() {
+        Task<Void> navigationTask = new Task<Void>() {
+            @Override
+            protected Void call() throws Exception {
+                // Wait for 1 second to show success message
+                Thread.sleep(1000);
+                return null;
+            }
+
+            @Override
+            protected void succeeded() {
+                Platform.runLater(() -> {
+                    try {
+                        // Verify session is still valid before navigation
+                        if (!UserSession.isSessionValid()) {
+                            showError("Session tidak valid. Silakan login kembali.");
+                            return;
+                        }
+
+                        logger.info("Navigating to dashboard for user ID: " + UserSession.getCurrentUserId());
+                        SceneSwitcher.switchTo("Dashboard.fxml", (Stage) loginButton.getScene().getWindow());
+
+                    } catch (Exception e) {
+                        logger.severe("Error switching to dashboard: " + e.getMessage());
+                        showError("Gagal mengalihkan ke dashboard: " + e.getMessage());
+                        setButtonState(true);
+                        e.printStackTrace();
+                    }
+                });
+            }
+
+            @Override
+            protected void failed() {
+                Platform.runLater(() -> {
+                    logger.severe("Navigation task failed: " + getException().getMessage());
+                    showError("Gagal mengalihkan ke dashboard.");
+                    setButtonState(true);
+                });
+            }
+        };
+
+        Thread navigationThread = new Thread(navigationTask);
+        navigationThread.setDaemon(true);
+        navigationThread.start();
+    }
+
+    private void initiateAccountLockout() {
+        isLockedOut = true;
+        setButtonState(false);
+
+        Task<Void> lockoutTask = new Task<Void>() {
+            @Override
+            protected Void call() throws Exception {
+                Thread.sleep(LOCKOUT_DURATION_SECONDS * 1000);
+                return null;
+            }
+
+            @Override
+            protected void succeeded() {
+                Platform.runLater(() -> {
+                    loginAttempts = 0;
+                    isLockedOut = false;
+                    setButtonState(true);
+                    hideMessages();
+                    logger.info("Account lockout period ended");
+                });
+            }
+
+            @Override
+            protected void failed() {
+                Platform.runLater(() -> {
+                    logger.severe("Lockout task failed: " + getException().getMessage());
+                    // Reset state even if task failed
+                    loginAttempts = 0;
+                    isLockedOut = false;
+                    setButtonState(true);
+                });
+            }
+        };
+
+        Thread lockoutThread = new Thread(lockoutTask);
+        lockoutThread.setDaemon(true);
+        lockoutThread.start();
+
+        logger.warning("Account locked out for " + LOCKOUT_DURATION_SECONDS + " seconds");
+    }
+
     @FXML
     private void onSignupClick() {
-        SceneSwitcher.switchTo("Register.fxml", (Stage) signupLabel.getScene().getWindow());
+        try {
+            // Clear any existing session before going to register
+            UserSession.clearSession();
+            System.clearProperty("current.user.id");
+
+            SceneSwitcher.switchTo("Register.fxml", (Stage) signupLabel.getScene().getWindow());
+
+        } catch (Exception e) {
+            logger.severe("Error navigating to signup: " + e.getMessage());
+            showError("Gagal mengalihkan ke halaman pendaftaran.");
+            e.printStackTrace();
+        }
     }
 
     private void showError(String message) {
-        errorMessage.setText(message);
-        errorMessage.setVisible(true);
-        successMessage.setVisible(false);
+        Platform.runLater(() -> {
+            errorMessage.setText(message);
+            errorMessage.setVisible(true);
+            successMessage.setVisible(false);
+        });
     }
 
     private void showSuccess(String message) {
-        successMessage.setText(message);
-        successMessage.setVisible(true);
-        errorMessage.setVisible(false);
+        Platform.runLater(() -> {
+            successMessage.setText(message);
+            successMessage.setVisible(true);
+            errorMessage.setVisible(false);
+        });
     }
 
     private void hideMessages() {
-        errorMessage.setVisible(false);
-        successMessage.setVisible(false);
+        Platform.runLater(() -> {
+            errorMessage.setVisible(false);
+            successMessage.setVisible(false);
+        });
     }
 
     private void setButtonState(boolean enabled) {
-        loginButton.setDisable(!enabled);
+        Platform.runLater(() -> {
+            loginButton.setDisable(!enabled);
+        });
     }
 }
