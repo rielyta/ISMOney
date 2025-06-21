@@ -13,14 +13,14 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="491.0" prefWidth="756.0" style="-fx-background-color:  radial-gradient(center 50% 50%, radius 100%, #63DBF3 0%, #A2EEF9 60%, #FFFFFF 90%);" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.ismoney.controller.savingGoalFormController">
+<AnchorPane prefHeight="650.0" prefWidth="900.0" style="-fx-background-color:  radial-gradient(center 50% 50%, radius 100%, #63DBF3 0%, #A2EEF9 60%, #FFFFFF 90%);" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.ismoney.controller.savingGoalFormController">
 
-    <Label layoutX="255.0" layoutY="25.0" text="Form Target Tabungan" textFill="#8c0093">
+    <Label layoutX="320.0" layoutY="25.0" text="Form Target Tabungan" textFill="#8c0093">
         <font>
             <Font name="System Bold" size="26.0" />
         </font>
     </Label>
-    <VBox spacing="15.0" AnchorPane.bottomAnchor="20.0" AnchorPane.leftAnchor="50.0" AnchorPane.rightAnchor="50.0" AnchorPane.topAnchor="80.0">
+    <VBox spacing="15.0" AnchorPane.bottomAnchor="20.0" AnchorPane.leftAnchor="50.0" AnchorPane.rightAnchor="50.0" AnchorPane.topAnchor="150.0">
         <HBox prefWidth="656.0" spacing="85.0">
             <Label text="Nama Target" textFill="#333">
                 <font>
