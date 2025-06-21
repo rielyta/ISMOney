@@ -6,9 +6,11 @@ import com.example.ismoney.model.TransactionType;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.time.LocalDate;
 import java.math.BigDecimal;
+import java.util.Map;
 
 public class TransactionDAO {
     private DatabaseConfig dbConfig;
@@ -268,4 +270,125 @@ public class TransactionDAO {
         return transactions;
     }
 
+    public List<Transaction> getTransactionsByUserIdAndMonth(Integer userId, int year, int month) {
+        List<Transaction> transactions = new ArrayList<>();
+
+        String sql = "SELECT transaction_id, user_id, category_id, amount, transaction_date, note, type " +
+                "FROM transactions " +
+                "WHERE user_id = ? AND EXTRACT(YEAR FROM transaction_date) = ? AND EXTRACT(MONTH FROM transaction_date) = ? " +
+                "ORDER BY transaction_date DESC";
+
+        try (Connection conn = DatabaseConfig.getInstance().getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, userId);
+            stmt.setInt(2, year);
+            stmt.setInt(3, month);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Transaction transaction = new Transaction();
+                    transaction.setTransactionId(rs.getInt("transaction_id"));
+                    transaction.setUserId(rs.getInt("user_id"));
+                    transaction.setCategoryId(rs.getInt("category_id"));
+                    transaction.setAmount(rs.getBigDecimal("amount"));
+                    transaction.setTransactionDate(rs.getDate("transaction_date").toLocalDate());
+                    transaction.setNote(rs.getString("note"));
+
+                    String typeStr = rs.getString("type");
+                    transaction.setType(TransactionType.valueOf(typeStr.toUpperCase()));
+
+                    transactions.add(transaction);
+                }
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Error getting transactions by user ID and month: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return transactions;
+    }
+
+    public List<Transaction> getRecentTransactionsByUserId(Integer userId, int limit) {
+        List<Transaction> transactions = new ArrayList<>();
+
+        String sql = "SELECT transaction_id, user_id, category_id, amount, transaction_date, note, type " +
+                "FROM transactions " +
+                "WHERE user_id = ? " +
+                "ORDER BY transaction_date DESC, transaction_id DESC " +
+                "LIMIT ?";
+
+        try (Connection conn = DatabaseConfig.getInstance().getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, userId);
+            stmt.setInt(2, limit);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Transaction transaction = new Transaction();
+                    transaction.setTransactionId(rs.getInt("transaction_id"));
+                    transaction.setUserId(rs.getInt("user_id"));
+                    transaction.setCategoryId(rs.getInt("category_id"));
+                    transaction.setAmount(rs.getBigDecimal("amount"));
+                    transaction.setTransactionDate(rs.getDate("transaction_date").toLocalDate());
+                    transaction.setNote(rs.getString("note"));
+
+                    // Convert string to TransactionType enum
+                    String typeStr = rs.getString("type");
+                    transaction.setType(TransactionType.valueOf(typeStr.toUpperCase()));
+
+                    transactions.add(transaction);
+                }
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Error getting recent transactions: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return transactions;
+    }
+
+    public List<Transaction> getTransactionsByDateRange(Integer userId, LocalDate startDate, LocalDate endDate) {
+        List<Transaction> transactions = new ArrayList<>();
+
+        String sql = "SELECT transaction_id, user_id, category_id, amount, transaction_date, note, type " +
+                "FROM transactions " +
+                "WHERE user_id = ? AND transaction_date >= ? AND transaction_date <= ? " +
+                "ORDER BY transaction_date DESC";
+
+        try (Connection conn = DatabaseConfig.getInstance().getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, userId);
+            stmt.setDate(2, java.sql.Date.valueOf(startDate));
+            stmt.setDate(3, java.sql.Date.valueOf(endDate));
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Transaction transaction = new Transaction();
+                    transaction.setTransactionId(rs.getInt("transaction_id"));
+                    transaction.setUserId(rs.getInt("user_id"));
+                    transaction.setCategoryId(rs.getInt("category_id"));
+                    transaction.setAmount(rs.getBigDecimal("amount"));
+                    transaction.setTransactionDate(rs.getDate("transaction_date").toLocalDate());
+                    transaction.setNote(rs.getString("note"));
+
+                    // Convert string to TransactionType enum
+                    String typeStr = rs.getString("type");
+                    transaction.setType(TransactionType.valueOf(typeStr.toUpperCase()));
+
+                    transactions.add(transaction);
+                }
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Error getting transactions by date range: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return transactions;
+    }
 }

@@ -13,13 +13,16 @@ public class SavingGoal {
     private LocalDate createdDate;
     private String description;
     private String status;
+    private LocalDate updatedAt;
 
     public SavingGoal() {
         // Inisialisasi default values jika diperlukan
         this.currentAmount = BigDecimal.ZERO;
         this.createdDate = LocalDate.now();
+        this.updatedAt = LocalDate.now();
         this.status = "ACTIVE";
     }
+
 
     // Constructor tambahan untuk pemanggilan dari DAO
     public SavingGoal(Integer goalId, String goalName, BigDecimal targetAmount, BigDecimal currentAmount,
@@ -69,6 +72,7 @@ public class SavingGoal {
         }
     }
 
+    
     // Getters and Setters
     public Integer getGoalId() { return goalId; }
     public void setGoalId(Integer goalId) { this.goalId = goalId; }

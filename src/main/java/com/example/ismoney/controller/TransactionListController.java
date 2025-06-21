@@ -35,6 +35,7 @@ public class TransactionListController {
     @FXML private TableColumn<Transaction, BigDecimal> expenseColumn;
     @FXML private TableColumn<Transaction, String> categoryColumn;
     @FXML private TableColumn<Transaction, BigDecimal> totalColumn;
+    @FXML private TableColumn<Transaction, String> noteColumn;
 
     @FXML private TextField searchField;
     @FXML private ComboBox<String> filterComboBox;
@@ -49,8 +50,7 @@ public class TransactionListController {
     private CategoryDAO categoryDAO;
     private ObservableList<Transaction> allTransactions;
     private Integer currentUserId;
-    private Map<Integer, Category> categoryCache = new HashMap<>(); // Cache categories to reduce DB calls
-
+    private Map<Integer, Category> categoryCache = new HashMap<>();
     @FXML
     public void initialize() {
         System.out.println("TransactionListController initialized!");
@@ -184,6 +184,32 @@ public class TransactionListController {
 
         categoryColumn.setCellValueFactory(cellData ->
                 new SimpleStringProperty(getCategoryNameFromCache(cellData.getValue().getCategoryId())));
+
+        noteColumn.setCellValueFactory(cellData -> {
+            String note = cellData.getValue().getNote();
+            return new SimpleStringProperty(note != null && !note.trim().isEmpty() ? note : "-");
+        });
+
+        noteColumn.setCellFactory(column -> new TableCell<Transaction, String>() {
+            @Override
+            protected void updateItem(String note, boolean empty) {
+                super.updateItem(note, empty);
+                if (empty || note == null) {
+                    setText("");
+                    setTooltip(null);
+                } else {
+                    if (note.length() > 30) {
+                        setText(note.substring(0, 27) + "...");
+                        setTooltip(new Tooltip(note));
+                    } else {
+                        setText(note);
+                        setTooltip(null);
+                    }
+
+                    setStyle("-fx-text-fill: #666666; -fx-font-style: italic;");
+                }
+            }
+        });
 
         totalColumn.setCellValueFactory(new PropertyValueFactory<>("amount"));
         formatCurrencyColumns();
