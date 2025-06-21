@@ -27,20 +27,20 @@ public class TransactionEditFormController {
     private CategoryDAO categoryDAO;
     private Transaction currentTransaction;
 
+    // Menginisialisasi semua komponen dan event handlers
     @FXML
     public void initialize() {
         System.out.println("TransactionEditFormController initialized!");
 
         try {
+            //inisialisasi DAO Objects
             transactionDAO = new TransactionDAO();
             categoryDAO = new CategoryDAO();
-
+            //Drpdown untuk tipe transaksi
             typeComboBox.setItems(FXCollections.observableArrayList("Pendapatan", "Pengeluaran"));
-
-            // Load categories
+            //load categories dari db
             loadCategories();
-
-            // Setup event handlers
+            //memfilter kategori berdasarkan tipe transaksi
             typeComboBox.setOnAction(event -> {
                 String selectedType = typeComboBox.getValue();
                 if (selectedType != null) {
@@ -54,30 +54,29 @@ public class TransactionEditFormController {
         }
     }
 
+    //Set transaksi yang akan diedit dan populate form fields
     public void setTransaction(Transaction transaction) {
         this.currentTransaction = transaction;
         populateFields();
     }
 
+    //Mengisi form fields dengan data dari transaksi yang sedang diedit
     private void populateFields() {
         if (currentTransaction != null) {
+            //set data yg diedit
             amountField.setText(currentTransaction.getAmount().toString());
 
-            // Set type and trigger filtering
             String typeValue = currentTransaction.getType() == TransactionType.INCOME ? "Pendapatan" : "Pengeluaran";
             typeComboBox.setValue(typeValue);
 
-            // Filter categories by type first
             filterCategoriesByType(typeValue);
 
             datePicker.setValue(currentTransaction.getTransactionDate());
             noteField.setText(currentTransaction.getNote() != null ? currentTransaction.getNote() : "");
 
-            // Set category after filtering
             try {
                 Category category = categoryDAO.getCategoryById(currentTransaction.getCategoryId());
                 if (category != null) {
-                    // Find the category in the filtered list
                     for (Category c : categoryComboBox.getItems()) {
                         if (c.getCategoriesId().equals(category.getCategoriesId())) {
                             categoryComboBox.setValue(c);
@@ -93,6 +92,7 @@ public class TransactionEditFormController {
 
     private List<Category> allCategories = new ArrayList<>();
 
+    //Memuat semua kategori dari database ke cache lokal
     private void loadCategories() {
         try {
             allCategories = categoryDAO.getAllCategories();
@@ -103,6 +103,7 @@ public class TransactionEditFormController {
         }
     }
 
+    //Filter kategori berdasarkan tipe transaksi yang dipilih
     private void filterCategoriesByType(String selectedType) {
         try {
             List<Category> filtered = allCategories.stream()
@@ -116,27 +117,27 @@ public class TransactionEditFormController {
         }
     }
 
-
+    //Handler untuk tombol Save utk menyimpan perubahan transaksi
     @FXML
     private void handleSaveTransaction() {
         System.out.println("Update transaction button clicked!");
-
+        // Validasi bahwa ada transaksi yang sedang diedit
         if (currentTransaction == null) {
             showAlert("Error", "Tidak ada transaksi yang dipilih untuk diedit.");
             return;
         }
-
-        // Validate input
+        // Validasi input form
         if (!validateInput()) return;
 
         try {
-            // Update transaction data
+            // Ambil data dari form fields
             BigDecimal amount = new BigDecimal(amountField.getText().trim());
             String type = typeComboBox.getValue();
             Category category = categoryComboBox.getValue();
             LocalDate date = datePicker.getValue();
             String note = noteField.getText().trim();
 
+            // Update data transaksi dengan nilai baru
             currentTransaction.setAmount(amount);
             currentTransaction.setType(type.equals("Pendapatan") ? TransactionType.INCOME : TransactionType.OUTCOME);
             currentTransaction.setCategoryId(category.getCategoriesId());
@@ -145,7 +146,7 @@ public class TransactionEditFormController {
 
             System.out.println("Attempting to update transaction: " + currentTransaction);
 
-            // Save to database
+            // Simpan perubahan ke database
             boolean success = transactionDAO.updateTransaction(currentTransaction);
 
             if (success) {
@@ -162,14 +163,15 @@ public class TransactionEditFormController {
         }
     }
 
+    //Validasi input form sebelum menyimpan data
     private boolean validateInput() {
-        // Validate amount
+        //nominal
         if (amountField.getText() == null || amountField.getText().trim().isEmpty()) {
             showAlert("Validasi Gagal", "Nominal harus diisi!");
             amountField.requestFocus();
             return false;
         }
-
+        //format dan nominal
         try {
             BigDecimal amount = new BigDecimal(amountField.getText().trim());
             if (amount.compareTo(BigDecimal.ZERO) <= 0) {
@@ -182,22 +184,19 @@ public class TransactionEditFormController {
             amountField.requestFocus();
             return false;
         }
-
-        // Validate type
+        //tipe transaksi
         if (typeComboBox.getValue() == null) {
             showAlert("Validasi Gagal", "Tipe transaksi harus dipilih!");
             typeComboBox.requestFocus();
             return false;
         }
-
-        // Validate category
+        //kategori
         if (categoryComboBox.getValue() == null) {
             showAlert("Validasi Gagal", "Kategori harus dipilih!");
             categoryComboBox.requestFocus();
             return false;
         }
-
-        // Validate date
+        //tanggal
         if (datePicker.getValue() == null) {
             showAlert("Validasi Gagal", "Tanggal transaksi harus dipilih!");
             datePicker.requestFocus();
@@ -207,16 +206,19 @@ public class TransactionEditFormController {
         return true;
     }
 
+    //Handlar tombol batal utk menutup form tanpa menyimpan perubahan
     @FXML
     private void handleCancel() {
         closeForm();
     }
 
+    //Menutup form edit transaksi
     private void closeForm() {
         Stage stage = (Stage) amountField.getScene().getWindow();
         stage.close();
     }
 
+    //Menampilkan alert dialog untuk pesan peringatan atau error
     private void showAlert(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.WARNING);
         alert.setTitle(title);
@@ -225,6 +227,7 @@ public class TransactionEditFormController {
         alert.showAndWait();
     }
 
+    //Menampilkan alert dialog untuk pesan sukses
     private void showSuccessAlert(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(title);
