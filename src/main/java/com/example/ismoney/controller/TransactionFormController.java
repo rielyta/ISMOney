@@ -359,10 +359,6 @@ public class TransactionFormController {
         SceneSwitcher.switchTo("Transaction/TransactionList.fxml", (Stage) handleCancel.getScene().getWindow());
     }
 
-    private void closeForm() {
-        Stage stage = (Stage) amountField.getScene().getWindow();
-        stage.close();
-    }
 
     private void showAlert(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.WARNING);
