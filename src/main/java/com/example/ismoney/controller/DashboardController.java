@@ -7,6 +7,10 @@ import com.example.ismoney.model.SavingGoal;
 import com.example.ismoney.model.Transaction;
 import com.example.ismoney.model.TransactionType;
 import com.example.ismoney.util.SceneSwitcher;
+import javafx.animation.Animation;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -14,12 +18,14 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
@@ -50,6 +56,12 @@ public class DashboardController {
     private Integer currentUserId;
     private Map<Integer, String> categoryCache = new HashMap<>();
 
+    // Auto refresh components
+    private Timeline autoRefreshTimeline;
+    private static final int REFRESH_INTERVAL_SECONDS = 30; // Refresh setiap 30 detik
+    private LocalDateTime lastRefreshTime;
+    private Label lastUpdateLabel;
+
     @FXML
     public void initialize() {
         try {
@@ -61,8 +73,10 @@ public class DashboardController {
             loadCategoriesCache();
             setupActivityLogTable();
             setupDatePicker();
-            loadFinancialSummary();
-            loadActivityLog();
+            setupAutoRefresh();
+
+            // Initial load
+            refreshDashboard();
 
         } catch (Exception e) {
             showAlert("Kesalahan", "Gagal menginisialisasi dashboard: " + e.getMessage());
@@ -70,11 +84,53 @@ public class DashboardController {
         }
     }
 
+    private void setupAutoRefresh() {
+        // Create auto refresh timeline
+        autoRefreshTimeline = new Timeline(
+                new KeyFrame(Duration.seconds(REFRESH_INTERVAL_SECONDS), e -> {
+                    Platform.runLater(this::refreshDashboard);
+                })
+        );
+        autoRefreshTimeline.setCycleCount(Animation.INDEFINITE);
+        autoRefreshTimeline.play();
+
+        System.out.println("Auto refresh enabled - refreshing every " + REFRESH_INTERVAL_SECONDS + " seconds");
+    }
+
+    private void refreshDashboard() {
+        try {
+            System.out.println("Refreshing dashboard data...");
+
+            // Refresh data
+            loadCategoriesCache();
+            loadFinancialSummary();
+            loadActivityLog();
+
+            // Update last refresh time
+            lastRefreshTime = LocalDateTime.now();
+
+            System.out.println("Dashboard refreshed at: " + lastRefreshTime.format(DateTimeFormatter.ofPattern("HH:mm:ss")));
+
+        } catch (Exception e) {
+            System.err.println("Error during auto refresh: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
     private void setupDatePicker() {
         filterDatePicker.setValue(LocalDate.now());
         filterDatePicker.setOnAction(event -> {
-            loadFinancialSummary();
-            loadActivityLog();
+            // Stop auto refresh temporarily during manual refresh
+            if (autoRefreshTimeline != null) {
+                autoRefreshTimeline.stop();
+            }
+
+            refreshDashboard();
+
+            // Restart auto refresh
+            if (autoRefreshTimeline != null) {
+                autoRefreshTimeline.play();
+            }
         });
     }
 
@@ -162,8 +218,6 @@ public class DashboardController {
             BigDecimal totalExpense = BigDecimal.ZERO;
 
             for (Transaction transaction : monthlyTransactions) {
-                System.out.println("Transaction: " + transaction.getType() + " - " + transaction.getAmount());
-
                 if (transaction.getType() == TransactionType.INCOME) {
                     totalIncome = totalIncome.add(transaction.getAmount());
                 } else if (transaction.getType() == TransactionType.OUTCOME) {
@@ -172,10 +226,6 @@ public class DashboardController {
             }
 
             BigDecimal totalBalance = totalIncome.subtract(totalExpense);
-
-            System.out.println("Total Income: " + totalIncome);
-            System.out.println("Total Expense: " + totalExpense);
-            System.out.println("Total Balance: " + totalBalance);
 
             // Update UI fields
             totalIncomeField.setText("Rp " + String.format("%,.0f", totalIncome.doubleValue()));
@@ -229,7 +279,7 @@ public class DashboardController {
                 activityLogs.add(log);
             }
 
-            // Load recent saving goals activities (diperbaiki - tidak menggunakan exception)
+            // Load recent saving goals activities
             try {
                 List<SavingGoal> recentGoals = savingGoalDAO.getRecentUpdatedGoals(5);
                 for (SavingGoal goal : recentGoals) {
@@ -248,7 +298,7 @@ public class DashboardController {
                 System.err.println("Error loading saving goals for activity log: " + e.getMessage());
             }
 
-            // Sort by date (newest first) - improved sorting
+            // Sort by date (newest first)
             activityLogs.sort((a, b) -> {
                 try {
                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
@@ -260,7 +310,10 @@ public class DashboardController {
                 }
             });
 
-            activityLogTable.setItems(activityLogs);
+            // Update table di UI thread
+            Platform.runLater(() -> {
+                activityLogTable.setItems(activityLogs);
+            });
 
         } catch (Exception e) {
             System.err.println("Error loading activity log: " + e.getMessage());
@@ -270,12 +323,50 @@ public class DashboardController {
 
     private void loadCategoriesCache() {
         try {
+            categoryCache.clear();
             categoryDAO.getAllCategories().forEach(category ->
                     categoryCache.put(category.getCategoriesId(), category.getName())
             );
         } catch (Exception e) {
             System.err.println("Error loading categories cache: " + e.getMessage());
         }
+    }
+
+    // Method untuk manual refresh (bisa dipanggil dari button atau keyboard shortcut)
+    @FXML
+    private void handleManualRefresh() {
+        System.out.println("Manual refresh triggered");
+        refreshDashboard();
+    }
+
+    // Method untuk toggle auto refresh
+    public void toggleAutoRefresh() {
+        if (autoRefreshTimeline != null) {
+            if (autoRefreshTimeline.getStatus() == Animation.Status.RUNNING) {
+                autoRefreshTimeline.stop();
+                System.out.println("Auto refresh stopped");
+            } else {
+                autoRefreshTimeline.play();
+                System.out.println("Auto refresh started");
+            }
+        }
+    }
+
+    // Method untuk mengubah interval refresh
+    public void setRefreshInterval(int seconds) {
+        if (autoRefreshTimeline != null) {
+            autoRefreshTimeline.stop();
+        }
+
+        autoRefreshTimeline = new Timeline(
+                new KeyFrame(Duration.seconds(seconds), e -> {
+                    Platform.runLater(this::refreshDashboard);
+                })
+        );
+        autoRefreshTimeline.setCycleCount(Animation.INDEFINITE);
+        autoRefreshTimeline.play();
+
+        System.out.println("Refresh interval changed to " + seconds + " seconds");
     }
 
     private Integer getCurrentLoggedInUserId() {
@@ -345,16 +436,31 @@ public class DashboardController {
 
     @FXML
     private void handleLogoutButton() {
+        // Stop auto refresh before logout
+        if (autoRefreshTimeline != null) {
+            autoRefreshTimeline.stop();
+        }
+
         Stage currentStage = (Stage) logOutBtn.getScene().getWindow();
         SceneSwitcher.logout(currentStage, "/com/example/ismoney/Login.fxml");
     }
 
+    // Cleanup method - panggil saat scene akan ditutup
+    public void cleanup() {
+        if (autoRefreshTimeline != null) {
+            autoRefreshTimeline.stop();
+            System.out.println("Auto refresh stopped - cleanup");
+        }
+    }
+
     private void showAlert(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
+        Platform.runLater(() -> {
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle(title);
+            alert.setHeaderText(null);
+            alert.setContentText(message);
+            alert.showAndWait();
+        });
     }
 
     // Inner class untuk Activity Log
@@ -377,8 +483,6 @@ public class DashboardController {
         public String getType() { return type.get(); }
         public void setType(String type) { this.type.set(type); }
 
-        public String getDescription() { return description.get(); }
-        public void setDescription(String description) { this.description.set(description); }
 
         public String getAmount() { return amount.get(); }
         public void setAmount(String amount) { this.amount.set(amount); }
