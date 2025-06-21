@@ -121,6 +121,7 @@ public class savingGoalFormController implements Initializable {
                 showAlert(Alert.AlertType.INFORMATION, "Sukses",
                         currentGoal == null ? "Goal berhasil ditambahkan" : "Goal berhasil diupdate");
                 clearForm();
+                SceneSwitcher.switchTo("savingGoals/savingGoalList.fxml", (Stage) simpanButton.getScene().getWindow());
             } else {
                 showAlert(Alert.AlertType.ERROR, "Error", "Gagal menyimpan goal");
             }

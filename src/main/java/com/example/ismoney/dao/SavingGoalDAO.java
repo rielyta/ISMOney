@@ -4,9 +4,13 @@ import com.example.ismoney.database.DatabaseConfig;
 import com.example.ismoney.model.SavingGoal;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.*;
+import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class SavingGoalDAO {
     private DatabaseConfig dbConfig;
@@ -212,5 +216,55 @@ public class SavingGoalDAO {
             }
         }
         return savingGoals;
+    }
+
+    public List<SavingGoal> getRecentUpdatedGoals(int limit) {
+        List<SavingGoal> goals = new ArrayList<>();
+        String sql = "SELECT goal_id, goal_name, target_amount, current_amount, target_date, created_date, description, status " +
+                "FROM saving_goals WHERE current_amount > 0 ORDER BY created_date DESC LIMIT ?";
+
+        try (Connection conn = DatabaseConfig.getInstance().getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, limit);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    SavingGoal goal = new SavingGoal();
+                    goal.setGoalId(rs.getInt("goal_id"));
+                    goal.setGoalName(rs.getString("goal_name"));
+                    goal.setTargetAmount(rs.getBigDecimal("target_amount"));
+                    goal.setCurrentAmount(rs.getBigDecimal("current_amount"));
+                    goal.setTargetDate(rs.getDate("target_date").toLocalDate());
+                    goal.setCreatedDate(rs.getDate("created_date").toLocalDate());
+                    goal.setStatus(rs.getString("status"));
+                    goal.setDescription(rs.getString("description"));
+                    goals.add(goal);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getting recent updated goals: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return goals;
+    }
+
+    public boolean updateGoalStatusBasedOnProgress(Integer goalId, String status) {
+        String sql = "UPDATE saving_goals SET status = ? WHERE goal_id = ?";
+
+        try (Connection conn = DatabaseConfig.getInstance().getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, status);
+            stmt.setInt(2, goalId);
+
+            return stmt.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            System.err.println("Error updating goal status: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
     }
 }
