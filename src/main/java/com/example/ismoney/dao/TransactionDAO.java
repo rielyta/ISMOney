@@ -13,17 +13,19 @@ import java.math.BigDecimal;
 public class TransactionDAO {
     private DatabaseConfig dbConfig;
 
+    //Inisialisasi koneksi database
     public TransactionDAO() {
         this.dbConfig = DatabaseConfig.getInstance();
     }
 
-    // CREATE - Simpan transaksi baru
+    //menyimpan transaksi baru ke database
     public boolean saveTransaction(Transaction transaction) {
         String sql = "INSERT INTO transactions (user_id, amount, type, category_id, note, transaction_date) VALUES (?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = dbConfig.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
+            //Set Parameter untuk prepared statement
             stmt.setInt(1, transaction.getUserId());
             stmt.setBigDecimal(2, transaction.getAmount());
             stmt.setString(3, transaction.getType().toString()); // INCOME atau OUTCOME
@@ -31,8 +33,10 @@ public class TransactionDAO {
             stmt.setString(5, transaction.getNote());
             stmt.setDate(6, Date.valueOf(transaction.getTransactionDate()));
 
+            //Eksekusi query insert
             int rowsAffected = stmt.executeUpdate();
 
+            //Insert berhasil lalu ambil auto-generated ID
             if (rowsAffected > 0) {
                 // Ambil ID yang auto-generated
                 ResultSet generatedKeys = stmt.getGeneratedKeys();
@@ -51,13 +55,11 @@ public class TransactionDAO {
         return false;
     }
 
-    // READ - Ambil semua transaksi berdasarkan user
-// UPDATE TransactionDAO.java - Fix the getTransactionsByUserId method
-
+    //Mengambil semua transksi berdasarkan useer Id
     public List<Transaction> getTransactionsByUserId(Integer userId) {
         List<Transaction> transactions = new ArrayList<>();
 
-        // First, check if created_at column exists
+        // Cek apakah kolom created_at ada di tabel
         String checkColumnSql = "SELECT column_name FROM information_schema.columns WHERE table_name = 'transactions' AND column_name = 'created_at'";
         boolean hasCreatedAt = false;
 
@@ -71,7 +73,7 @@ public class TransactionDAO {
             System.err.println("Error checking column existence: " + e.getMessage());
         }
 
-        // Use appropriate SQL based on column existence
+        // Tentukan query berdasarkan ketersediaan kolom created_at
         String sql;
         if (hasCreatedAt) {
             sql = "SELECT * FROM transactions WHERE user_id = ? ORDER BY transaction_date DESC, created_at DESC";
@@ -85,6 +87,7 @@ public class TransactionDAO {
             stmt.setInt(1, userId);
             ResultSet rs = stmt.executeQuery();
 
+            // Mapping hasil query ke object Transaction
             while (rs.next()) {
                 Transaction transaction = new Transaction();
                 transaction.setTransactionId(rs.getInt("transaction_id"));
@@ -95,7 +98,7 @@ public class TransactionDAO {
                 transaction.setNote(rs.getString("note"));
                 transaction.setTransactionDate(rs.getDate("transaction_date").toLocalDate());
 
-                // Only set created_at if column exists
+                // Set created_at jika kolom tersebut ada
                 if (hasCreatedAt) {
                     Timestamp createdAt = rs.getTimestamp("created_at");
                     if (createdAt != null) {
@@ -114,13 +117,15 @@ public class TransactionDAO {
         return transactions;
     }
 
-    // UPDATE - Update transaksi
+    //Memperbarui data transaksi yang sudah ada di database
     public boolean updateTransaction(Transaction transaction) {
+        // SQL query untuk update transaksi berdasarkan transaction_id
         String sql = "UPDATE transactions SET amount = ?, type = ?, category_id = ?, note = ?, transaction_date = ? WHERE transaction_id = ?";
 
         try (Connection conn = dbConfig.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
+            // Set parameter untuk update
             stmt.setBigDecimal(1, transaction.getAmount());
             stmt.setString(2, transaction.getType().toString());
             stmt.setInt(3, transaction.getCategoryId());
@@ -128,6 +133,7 @@ public class TransactionDAO {
             stmt.setDate(5, Date.valueOf(transaction.getTransactionDate()));
             stmt.setInt(6, transaction.getTransactionId());
 
+            // Return true jika ada row yang ter-update
             return stmt.executeUpdate() > 0;
 
         } catch (SQLException e) {
@@ -138,13 +144,15 @@ public class TransactionDAO {
         return false;
     }
 
-    // DELETE - Hapus transaksi
+    //Menghapus transaksi dari database berdasarkan transaction ID
     public boolean deleteTransaction(Integer transactionId) {
+        // SQL query untuk delete transaksi berdasarkan transaction_id
         String sql = "DELETE FROM transactions WHERE transaction_id = ?";
 
         try (Connection conn = dbConfig.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
+            // Return true jika ada row yang terhapus
             stmt.setInt(1, transactionId);
             return stmt.executeUpdate() > 0;
 
@@ -156,7 +164,6 @@ public class TransactionDAO {
         return false;
     }
 
-    // STATISTICS - Total income
     public BigDecimal getTotalIncome(Integer userId) {
         String sql = "SELECT COALESCE(SUM(amount), 0) as total FROM transactions WHERE user_id = ? AND type = 'INCOME'";
 
@@ -176,7 +183,6 @@ public class TransactionDAO {
         return BigDecimal.ZERO;
     }
 
-    // STATISTICS - Total expense
     public BigDecimal getTotalExpense(Integer userId) {
         String sql = "SELECT COALESCE(SUM(amount), 0) as total FROM transactions WHERE user_id = ? AND type = 'OUTCOME'";
 

@@ -436,12 +436,17 @@ public class TransactionListController {
             try {
                 SceneSwitcher.switchTo("Transaction/TransactionEditForm.fxml", (Stage) editButton.getScene().getWindow());
 
-                loadTransactions();
-                updateChart();
+                // Refresh semua data setelah edit
+                loadCategoriesCache(); // Refresh categories cache
+                loadTransactions();    // Refresh transactions
+                updateChart();         // Update chart
+
+                System.out.println("Data refreshed after edit");
 
             } catch (Exception e) {
                 System.err.println("Error opening edit form: " + e.getMessage());
-                showAlert("Info", "Fitur edit dalam pengembangan. Silakan hapus dan buat ulang transaksi.");
+                e.printStackTrace();
+                showAlert("Kesalahan", "Gagal membuka form edit: " + e.getMessage());
             }
         }
     }
