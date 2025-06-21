@@ -14,12 +14,17 @@ import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -35,6 +40,7 @@ public class DashboardController {
 
     @FXML private Button transactionButton;
     @FXML private Button GoalsListButton;
+    @FXML private Button budgetButton;  // Added budget button FXML
     @FXML private Button logOutBtn;
 
     // FXML fields untuk ringkasan keuangan
@@ -434,6 +440,27 @@ public class DashboardController {
         }
     }
 
+    // NEW: Budget button handler
+    @FXML
+    private void handleBudgetButton(ActionEvent event) {
+        try {
+            // Option 1: Using SceneSwitcher (recommended if you have a budget list)
+            SceneSwitcher.switchTo("Budget/BudgetList.fxml", (Stage) budgetButton.getScene().getWindow());
+
+            // Option 2: Alternative using FXMLLoader (if you prefer this approach)
+            // FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/ismoney/Budget/BudgetForm.fxml"));
+            // Parent root = loader.load();
+            // Stage stage = (Stage) budgetButton.getScene().getWindow();
+            // Scene scene = new Scene(root);
+            // stage.setScene(scene);
+            // stage.show();
+
+        } catch (Exception e) {
+            showAlert("Kesalahan", "Terjadi kesalahan tidak terduga: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
     @FXML
     private void handleLogoutButton() {
         // Stop auto refresh before logout
@@ -483,6 +510,8 @@ public class DashboardController {
         public String getType() { return type.get(); }
         public void setType(String type) { this.type.set(type); }
 
+        public String getDescription() { return description.get(); }
+        public void setDescription(String description) { this.description.set(description); }
 
         public String getAmount() { return amount.get(); }
         public void setAmount(String amount) { this.amount.set(amount); }
