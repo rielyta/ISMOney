@@ -38,6 +38,7 @@ public class TransactionFormController {
 
     private List<Category> defaultCategories = new ArrayList<>();
 
+    //inisialisasi komponen
     @FXML
     public void initialize() {
         System.out.println("TransactionFormController initialized!");
@@ -84,9 +85,9 @@ public class TransactionFormController {
         }
     }
 
+    //mendapatkan id user yang baru login
     private Integer getCurrentLoggedInUserId() {
         try {
-            //Baca user yang sedang login
             String currentUserIdStr = System.getProperty("current.user.id");
             if (currentUserIdStr != null && !currentUserIdStr.trim().isEmpty()) {
                 Integer currentUserId = Integer.parseInt(currentUserIdStr);
@@ -94,7 +95,6 @@ public class TransactionFormController {
                 return currentUserId;
             }
 
-            // Fallback ke logic lama jika tidak ada user yang login
             Integer latestUserId = getLatestUserId();
             if (latestUserId != null) {
                 System.out.println("Using latest user ID (fallback): " + latestUserId);
@@ -115,6 +115,7 @@ public class TransactionFormController {
         }
     }
 
+    //Backup method jika system property kosong
     private Integer getLatestUserId() {
         try (Connection conn = com.example.ismoney.database.DatabaseConfig.getInstance().getConnection()) {
             PreparedStatement stmt = conn.prepareStatement("SELECT id FROM users ORDER BY created_at DESC, id DESC LIMIT 1");
@@ -128,6 +129,7 @@ public class TransactionFormController {
         return null;
     }
 
+    //Backup method jika system property kosong
     private Integer getFirstExistingUserId() {
         try (Connection conn = com.example.ismoney.database.DatabaseConfig.getInstance().getConnection()) {
             PreparedStatement stmt = conn.prepareStatement("SELECT id FROM users ORDER BY id LIMIT 1");
@@ -141,6 +143,7 @@ public class TransactionFormController {
         return null;
     }
 
+    //Load semua kategori dari database
     private void loadCategoriesFromDatabase() {
         try {
             List<Category> dbCategories = categoryDAO.getAllCategories();
@@ -149,7 +152,6 @@ public class TransactionFormController {
             defaultCategories.clear();
             defaultCategories.addAll(dbCategories);
 
-            // Add default categories if database is empty
             if (dbCategories.isEmpty()) {
                 System.out.println("No categories in database, adding defaults...");
                 addDefaultCategories();
@@ -158,11 +160,11 @@ public class TransactionFormController {
         } catch (Exception e) {
             System.err.println("Error loading categories from database: " + e.getMessage());
             e.printStackTrace();
-            // Fallback to hardcoded categories
             addDefaultCategories();
         }
     }
 
+    //membuat kategori defailt
     private void addDefaultCategories() {
         defaultCategories.clear();
         defaultCategories.add(new Category(1, "Transportasi", "Pengeluaran"));
@@ -172,12 +174,14 @@ public class TransactionFormController {
         defaultCategories.add(new Category(5, "Bonus", "Pendapatan"));
     }
 
+    //Tambah opsi "➕ Tambah Kategori Baru..." ke dropdown
     private void setupCategoryComboBox() {
         // Add the "Add new category" option
         defaultCategories.add(new Category(-1, "➕ Tambah Kategori Baru...", ""));
         categoryComboBox.setItems(FXCollections.observableArrayList(defaultCategories));
     }
 
+    //Filter kategori berdasarkan tipe yang dipilih (Pendapatan/Pengeluaran)
     private void filterCategoriesByType(String selectedType) {
         List<Category> filtered = defaultCategories.stream()
                 .filter(c -> c.getCategoriesId() == -1 || c.getType().equals(selectedType))
@@ -186,6 +190,7 @@ public class TransactionFormController {
         categoryComboBox.setValue(null);
     }
 
+    //Tampilkan dialog input  kategori baru dan simpan
     private void showAddCategoryDialog(String type) {
         Dialog<Category> dialog = new Dialog<>();
         dialog.setTitle("Tambah Kategori Baru");
@@ -245,28 +250,25 @@ public class TransactionFormController {
         });
     }
 
+    //Handle tombol save utk menyimpan transaksi
     @FXML
     private void handleSaveTransaction() {
         System.out.println("Save transaction button clicked!");
 
-        // Check if we have a valid user ID
         if (currentUserId == null) {
             showAlert("Error", "Tidak ada user yang valid. Silakan login terlebih dahulu.");
             return;
         }
 
-        //Validasi input dari form
         if (!validateInput()) return;
 
         try {
-            //Ambil data dari form
             BigDecimal amount = new BigDecimal(amountField.getText().trim());
             String type = typeComboBox.getValue();
             Category category = categoryComboBox.getValue();
             LocalDate date = datePicker.getValue();
             String note = noteField.getText().trim();
 
-            //Buat object Transaction baru
             Transaction newTransaction = new Transaction();
             newTransaction.setUserId(currentUserId); // Use consistent user ID
             newTransaction.setAmount(amount);
@@ -277,15 +279,13 @@ public class TransactionFormController {
 
             System.out.println("Attempting to save transaction with user ID " + currentUserId + ": " + newTransaction);
 
-            //Simpan ke database via DAO
             boolean success = transactionDAO.saveTransaction(newTransaction);
 
-            // Tampilkan hasil dan navigate ke TransactionList
             if (success) {
                 showSuccessAlert("Berhasil", "Transaksi berhasil disimpan!");
                 clearForm();
 
-                //Vavigate ke TransactionList setelah save berhasil
+
                 Stage currentStage = (Stage) amountField.getScene().getWindow();
                 SceneSwitcher.switchTo("Transaction/TransactionList.fxml", currentStage);
                 System.out.println("Successfully navigated to TransactionList after save");
@@ -301,8 +301,8 @@ public class TransactionFormController {
         }
     }
 
+    //method untuk validasi input
     private boolean validateInput() {
-        // Validate amount
         if (amountField.getText() == null || amountField.getText().trim().isEmpty()) {
             showAlert("Validasi Gagal", "Nominal harus diisi!");
             amountField.requestFocus();
@@ -322,21 +322,18 @@ public class TransactionFormController {
             return false;
         }
 
-        // Validate type
         if (typeComboBox.getValue() == null) {
             showAlert("Validasi Gagal", "Tipe transaksi harus dipilih!");
             typeComboBox.requestFocus();
             return false;
         }
 
-        // Validate category
         if (categoryComboBox.getValue() == null || categoryComboBox.getValue().getCategoriesId() == -1) {
             showAlert("Validasi Gagal", "Kategori harus dipilih!");
             categoryComboBox.requestFocus();
             return false;
         }
 
-        // Validate date
         if (datePicker.getValue() == null) {
             showAlert("Validasi Gagal", "Tanggal transaksi harus dipilih!");
             datePicker.requestFocus();
@@ -346,6 +343,7 @@ public class TransactionFormController {
         return true;
     }
 
+    //mereset semua field ke kondisi awal
     private void clearForm() {
         amountField.clear();
         typeComboBox.setValue(null);
@@ -354,6 +352,7 @@ public class TransactionFormController {
         noteField.clear();
     }
 
+    //hamdler tombol cancel untuk membatalkan tambah transaksi
     @FXML
     private void handleCancel() {
         clearForm();
