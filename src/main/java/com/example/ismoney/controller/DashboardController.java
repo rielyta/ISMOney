@@ -440,7 +440,7 @@ public class DashboardController {
     @FXML
     private void handleBudgetButton(ActionEvent event) {
         try {
-            SceneSwitcher.switchTo("Budget/BudgetList.fxml", (Stage) budgetButton.getScene().getWindow());
+            SceneSwitcher.switchTo("Budget/Budget.fxml", (Stage) budgetButton.getScene().getWindow());
         } catch (Exception e) {
             showAlert("Kesalahan", "Terjadi kesalahan tidak terduga: " + e.getMessage());
             e.printStackTrace();
