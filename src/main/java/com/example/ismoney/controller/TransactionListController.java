@@ -80,25 +80,31 @@ public class TransactionListController {
 
     private Integer getCurrentLoggedInUserId() {
         try {
-            Integer latestUserId = getLatestUserId();
-            if (latestUserId != null) {
-                System.out.println("Using latest user ID: " + latestUserId);
-                return latestUserId;
+            // Baca dari system properties (user yang sedang login)
+            String currentUserIdStr = System.getProperty("current.user.id");
+            if (currentUserIdStr != null && !currentUserIdStr.trim().isEmpty()) {
+                try {
+                    Integer currentUserId = Integer.valueOf(currentUserIdStr.trim());
+                    System.out.println("Using logged-in user ID from system property: " + currentUserId);
+                    return currentUserId;
+                } catch (NumberFormatException e) {
+                    System.err.println("Invalid user ID in system property: " + currentUserIdStr);
+                }
             }
 
-            Integer existingUserId = getFirstExistingUserId();
-            if (existingUserId != null) {
-                System.out.println("Using first existing user ID: " + existingUserId);
-                return existingUserId;
-            }
+            //  Redirect ke login jika tidak ada user yang login
+            System.out.println("No logged-in user found. Should redirect to login.");
 
-            System.out.println("No users found, using default ID: 1");
+            // Untuk development/testing: gunakan user ID tertentu
+            System.out.println("Using development user ID 1 for testing");
             return 1;
+
         } catch (Exception e) {
             System.err.println("Error getting current user ID: " + e.getMessage());
-            return 1;
+            return 1; // Development fallback
         }
     }
+
 
     private Integer getLatestUserId() {
         try (Connection conn = com.example.ismoney.database.DatabaseConfig.getInstance().getConnection()) {
