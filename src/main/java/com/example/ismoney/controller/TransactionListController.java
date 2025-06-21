@@ -82,14 +82,12 @@ public class TransactionListController {
 
     private Integer getCurrentLoggedInUserId() {
         try {
-            // First try to get the most recently created user (likely the logged-in one)
             Integer latestUserId = getLatestUserId();
             if (latestUserId != null) {
                 System.out.println("Using latest user ID: " + latestUserId);
                 return latestUserId;
             }
 
-            // Fallback to first existing user
             Integer existingUserId = getFirstExistingUserId();
             if (existingUserId != null) {
                 System.out.println("Using first existing user ID: " + existingUserId);
@@ -189,7 +187,6 @@ public class TransactionListController {
             return new javafx.beans.property.SimpleObjectProperty<>(null);
         });
 
-        // Use cached categories instead of DB calls for each row
         categoryColumn.setCellValueFactory(cellData ->
                 new SimpleStringProperty(getCategoryNameFromCache(cellData.getValue().getCategoryId())));
 
@@ -269,7 +266,6 @@ public class TransactionListController {
                 System.out.println("No transactions found for user ID " + currentUserId);
                 checkAllTransactions();
             } else {
-                // Only print first few transactions to avoid spam
                 for (int i = 0; i < Math.min(3, transactions.size()); i++) {
                     Transaction t = transactions.get(i);
                     System.out.println("Transaction " + (i+1) + ": ID=" + t.getTransactionId() +
@@ -348,17 +344,14 @@ public class TransactionListController {
                             Collectors.reducing(BigDecimal.ZERO, Transaction::getAmount, BigDecimal::add)
                     ));
 
-            // Change title back to normal when data exists
             lineChart.setTitle("Data Transaksi");
 
-            // Create series
             XYChart.Series<String, Number> incomeSeries = new XYChart.Series<>();
             incomeSeries.setName("Pemasukan");
 
             XYChart.Series<String, Number> expenseSeries = new XYChart.Series<>();
             expenseSeries.setName("Pengeluaran");
 
-            // Add data points for each month
             for (String month : monthLabels) {
                 BigDecimal income = monthlyIncome.getOrDefault(month, BigDecimal.ZERO);
                 BigDecimal expense = monthlyExpense.getOrDefault(month, BigDecimal.ZERO);
@@ -370,7 +363,6 @@ public class TransactionListController {
             lineChart.getData().clear();
             lineChart.getData().addAll(incomeSeries, expenseSeries);
 
-            // Style the lines
             styleChartLines();
 
         } catch (Exception e) {
@@ -379,14 +371,14 @@ public class TransactionListController {
         }
     }
 
-    // Remove the createSampleChart method since we don't need it anymore
+
 
     private void styleChartLines() {
-        // Apply styling after chart is rendered
+
         lineChart.applyCss();
         lineChart.layout();
 
-        // Style the first series (blue line)
+
         if (!lineChart.getData().isEmpty()) {
             lineChart.getData().get(0).getNode().setStyle("-fx-stroke: #4A90E2; -fx-stroke-width: 3px;");
 
@@ -417,7 +409,7 @@ public class TransactionListController {
                         }
                     }
 
-                    // Filter berdasarkan pencarian (using cache)
+                    // Filter berdasarkan pencarian
                     if (!searchText.isEmpty()) {
                         String categoryName = getCategoryNameFromCache(transaction.getCategoryId()).toLowerCase();
                         String note = transaction.getNote() != null ? transaction.getNote().toLowerCase() : "";
@@ -434,6 +426,7 @@ public class TransactionListController {
         transactionTable.setItems(FXCollections.observableArrayList(filteredTransactions));
     }
 
+
     @FXML
     private void handleAddTransaction() {
         try {
@@ -447,6 +440,8 @@ public class TransactionListController {
 
             transactionStage.showAndWait();
 
+
+            loadCategoriesCache();
             loadTransactions();
             updateChart();
 
