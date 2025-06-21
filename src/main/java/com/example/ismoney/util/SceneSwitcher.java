@@ -66,49 +66,6 @@ public class SceneSwitcher {
         alert.showAndWait();
     }
 
-    public static void openModal(String fxmlFileName, String title) {
-        try {
-            logger.info("Membuka modal: " + fxmlFileName);
-
-            URL fxmlUrl = null;
-
-            fxmlUrl = SceneSwitcher.class.getResource("/com/example/ismoney/" + fxmlFileName);
-            if (fxmlUrl == null) {
-                logger.warning("FXML tidak ditemukan di: /com/example/ismoney/" + fxmlFileName);
-
-                fxmlUrl = SceneSwitcher.class.getResource("/" + fxmlFileName);
-                if (fxmlUrl == null) {
-                    logger.warning("FXML tidak ditemukan di: /" + fxmlFileName);
-
-                    fxmlUrl = SceneSwitcher.class.getResource(fxmlFileName);
-                    if (fxmlUrl == null) {
-                        throw new IOException("FXML tidak ditemukan: " + fxmlFileName);
-                    }
-                }
-            }
-
-            logger.info("FXML ditemukan di: " + fxmlUrl.toString());
-
-            FXMLLoader loader = new FXMLLoader(fxmlUrl);
-            Parent root = loader.load();
-
-            Stage modalStage = new Stage();
-            modalStage.setTitle(title);
-            modalStage.setScene(new Scene(root));
-            modalStage.initModality(Modality.APPLICATION_MODAL);
-            modalStage.centerOnScreen();
-
-            modalStage.showAndWait();
-
-            logger.info("Berhasil membuka modal: " + fxmlFileName);
-
-        } catch (IOException e) {
-            logger.log(Level.SEVERE, "Gagal memuat modal FXML: " + fxmlFileName, e);
-            throw new RuntimeException("Gagal memuat modal: " + fxmlFileName + " - " + e.getMessage(), e);
-        }
-    }
-
-
     public static boolean logout(Stage currentStage, String loginFxmlFileName) {
         logger.info("Attempting logout process");
 
