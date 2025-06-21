@@ -58,14 +58,6 @@ public class UserSession {
         System.out.println("Session cleared for user: " + username + " (ID: " + userId + ")");
     }
 
-    public static long getSessionDurationMinutes() {
-        UserSession session = getInstance();
-        if (session.isSessionValid() && session.loginTime != null) {
-            return ChronoUnit.MINUTES.between(session.loginTime, LocalDateTime.now());
-        }
-        return 0;
-    }
-
     private boolean isValid() {
         if (currentUserId == null || lastActivity == null) {
             return false;

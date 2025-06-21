@@ -5,10 +5,9 @@ import com.example.ismoney.model.SavingGoal;
 
 import java.math.BigDecimal;
 import java.sql.*;
+import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class SavingGoalDAO {
     private DatabaseConfig dbConfig;
@@ -16,6 +15,7 @@ public class SavingGoalDAO {
     public SavingGoalDAO() {
         this.dbConfig = DatabaseConfig.getInstance();
     }
+
 
     private SavingGoal mapResultSetToSavingGoal(ResultSet rs) throws SQLException {
         SavingGoal goal = new SavingGoal();
@@ -217,7 +217,6 @@ public class SavingGoalDAO {
         }
     }
 
-    // DEPRECATED METHODS - Maintained for backward compatibility but should not be used
     @Deprecated
     public List<SavingGoal> getRecentUpdatedGoals(int limit) {
         System.err.println("WARNING: getRecentUpdatedGoals(int) is deprecated and should not be used. Use getRecentUpdatedGoalsByUserId(Integer, int) instead.");

@@ -56,8 +56,9 @@ public class DashboardController {
     private Map<Integer, String> categoryCache = new HashMap<>();
 
     private Timeline autoRefreshTimeline;
-    private static final int REFRESH_INTERVAL_SECONDS = 30;
+    private static final int REFRESH_INTERVAL_SECONDS = 120;
     private LocalDateTime lastRefreshTime;
+    private boolean isRefreshing = false;
 
     @FXML
     public void initialize() {
@@ -76,9 +77,9 @@ public class DashboardController {
             loadCategoriesCache();
             setupActivityLogTable();
             setupDatePicker();
-            setupAutoRefresh();
 
             refreshDashboard();
+            setupAutoRefresh();
 
             System.out.println("Dashboard initialized for user: " + currentUser.getUsername() + " (ID: " + currentUserId + ")");
 
@@ -112,7 +113,11 @@ public class DashboardController {
     private void setupAutoRefresh() {
         autoRefreshTimeline = new Timeline(
                 new KeyFrame(Duration.seconds(REFRESH_INTERVAL_SECONDS), e -> {
-                    Platform.runLater(this::refreshDashboard);
+                    Platform.runLater(() -> {
+                        if (!isRefreshing) {
+                            refreshDashboard();
+                        }
+                    });
                 })
         );
         autoRefreshTimeline.setCycleCount(Animation.INDEFINITE);
@@ -122,6 +127,13 @@ public class DashboardController {
     }
 
     private void refreshDashboard() {
+        if (isRefreshing) {
+            System.out.println("Dashboard refresh already in progress, skipping...");
+            return;
+        }
+
+        isRefreshing = true;
+
         try {
             if (currentUserId == null || !UserSession.isSessionValid()) {
                 System.out.println("Invalid session detected. Logging out...");
@@ -140,8 +152,10 @@ public class DashboardController {
             System.out.println("Dashboard refreshed at: " + lastRefreshTime.format(DateTimeFormatter.ofPattern("HH:mm:ss")));
 
         } catch (Exception e) {
-            System.err.println("Error during auto refresh: " + e.getMessage());
+            System.err.println("Error during dashboard refresh: " + e.getMessage());
             e.printStackTrace();
+        } finally {
+            isRefreshing = false;
         }
     }
 
@@ -380,14 +394,19 @@ public class DashboardController {
             categoryDAO.getAllCategories().forEach(category ->
                     categoryCache.put(category.getCategoriesId(), category.getName())
             );
+            System.out.println("Categories cache loaded: " + categoryCache.size() + " categories");
         } catch (Exception e) {
             System.err.println("Error loading categories cache: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
     @FXML
     private void handleTransactionButton() {
         try {
+            if (autoRefreshTimeline != null) {
+                autoRefreshTimeline.stop();
+            }
             SceneSwitcher.switchTo("Transaction/TransactionList.fxml", (Stage) transactionButton.getScene().getWindow());
         } catch (Exception e) {
             showAlert("Kesalahan", "Terjadi kesalahan tidak terduga: " + e.getMessage());
@@ -398,6 +417,9 @@ public class DashboardController {
     @FXML
     private void handleGoalsListButton() {
         try {
+            if (autoRefreshTimeline != null) {
+                autoRefreshTimeline.stop();
+            }
             SceneSwitcher.switchTo("savingGoals/savingGoalList.fxml", (Stage) GoalsListButton.getScene().getWindow());
         } catch (Exception e) {
             showAlert("Kesalahan", "Terjadi kesalahan tidak terduga: " + e.getMessage());
@@ -408,6 +430,9 @@ public class DashboardController {
     @FXML
     private void handleBudgetButton() {
         try {
+            if (autoRefreshTimeline != null) {
+                autoRefreshTimeline.stop();
+            }
             SceneSwitcher.switchTo("Budget/Budget.fxml", (Stage) budgetButton.getScene().getWindow());
         } catch (Exception e) {
             showAlert("Kesalahan", "Terjadi kesalahan tidak terduga: " + e.getMessage());
@@ -424,7 +449,6 @@ public class DashboardController {
 
             UserSession.clearSession();
 
-            // Clear current user data
             currentUserId = null;
             currentUser = null;
             categoryCache.clear();
@@ -450,6 +474,15 @@ public class DashboardController {
         });
     }
 
+    public void onSceneActivated() {
+        System.out.println("Dashboard scene activated - refreshing data");
+        refreshDashboard();
+
+        if (autoRefreshTimeline != null && autoRefreshTimeline.getStatus() != Animation.Status.RUNNING) {
+            autoRefreshTimeline.play();
+        }
+    }
+
     public static class ActivityLog {
         private final SimpleStringProperty date;
         private final SimpleStringProperty type;
@@ -457,19 +490,58 @@ public class DashboardController {
         private final SimpleStringProperty amount;
 
         public ActivityLog(String date, String type, String description, String amount) {
-            this.date = new SimpleStringProperty(date);
-            this.type = new SimpleStringProperty(type);
-            this.description = new SimpleStringProperty(description);
-            this.amount = new SimpleStringProperty(amount);
+            this.date = new SimpleStringProperty(date != null ? date : "");
+            this.type = new SimpleStringProperty(type != null ? type : "");
+            this.description = new SimpleStringProperty(description != null ? description : "");
+            this.amount = new SimpleStringProperty(amount != null ? amount : "");
         }
 
-        public String getDate() { return date.get(); }
-        public void setDate(String date) { this.date.set(date); }
+        public String getDate() {
+            return date.get();
+        }
 
-        public String getType() { return type.get(); }
-        public void setType(String type) { this.type.set(type); }
+        public void setDate(String date) {
+            this.date.set(date != null ? date : "");
+        }
 
-        public String getAmount() { return amount.get(); }
-        public void setAmount(String amount) { this.amount.set(amount); }
+        public SimpleStringProperty dateProperty() {
+            return date;
+        }
+
+        public String getType() {
+            return type.get();
+        }
+
+        public void setType(String type) {
+            this.type.set(type != null ? type : "");
+        }
+
+        public SimpleStringProperty typeProperty() {
+            return type;
+        }
+
+        public String getDescription() {
+            return description.get();
+        }
+
+        public void setDescription(String description) {
+            this.description.set(description != null ? description : "");
+        }
+
+        public SimpleStringProperty descriptionProperty() {
+            return description;
+        }
+
+        public String getAmount() {
+            return amount.get();
+        }
+
+        public void setAmount(String amount) {
+            this.amount.set(amount != null ? amount : "");
+        }
+
+        public SimpleStringProperty amountProperty() {
+            return amount;
+        }
     }
 }
