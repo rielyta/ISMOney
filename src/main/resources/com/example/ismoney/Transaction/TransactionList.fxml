@@ -12,21 +12,22 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="498.0" prefWidth="780.0" style="-fx-background-color: radial-gradient(center 50% 50%, radius 100%, #63DBF3 0%, #A2EEF9 60%, #FFFFFF 90%);" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.ismoney.controller.TransactionListController">
+<AnchorPane prefHeight="650.0" prefWidth="900.0" style="-fx-background-color: radial-gradient(center 50% 50%, radius 100%, #63DBF3 0%, #A2EEF9 60%, #FFFFFF 90%);" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.ismoney.controller.TransactionListController">
     <children>
-        <TableView fx:id="transactionTable" layoutX="42.0" layoutY="265.0" prefHeight="219.0" prefWidth="510.0">
+        <TableView fx:id="transactionTable" layoutX="42.0" layoutY="280.0" prefHeight="275.0" prefWidth="680.0">
             <columns>
-                <TableColumn fx:id="dateColumn" prefWidth="83.0" text="Tanggal" />
-                <TableColumn fx:id="incomeColumn" prefWidth="109.0" text="Pendapatan" />
-                <TableColumn fx:id="expenseColumn" prefWidth="109.0" text="Pengeluaran" />
-                <TableColumn fx:id="categoryColumn" prefWidth="98.0" text="Kategori" />
-                <TableColumn fx:id="totalColumn" prefWidth="95.0" text="Total" />
+                <TableColumn fx:id="dateColumn" prefWidth="90.0" text="Tanggal" />
+                <TableColumn fx:id="incomeColumn" prefWidth="110.0" text="Pendapatan" />
+                <TableColumn fx:id="expenseColumn" prefWidth="110.0" text="Pengeluaran" />
+                <TableColumn fx:id="categoryColumn" prefWidth="100.0" text="Kategori" />
+                <TableColumn fx:id="noteColumn" prefWidth="180.0" text="Catatan" />
+                <TableColumn fx:id="totalColumn" prefWidth="90.0" text="Total" />
             </columns>
         </TableView>
 
-        <Button fx:id="addTransactionButton" layoutX="560.0" layoutY="382.0" mnemonicParsing="false" onAction="#handleAddTransaction" prefHeight="25.0" prefWidth="139.0" style="-fx-background-color: #8c0093; -fx-cursor: hand;" text="Tambah Transaksi" textFill="#fff3f3" />
+        <Button fx:id="addTransactionButton" layoutX="740.0" layoutY="470.0" mnemonicParsing="false" onAction="#handleAddTransaction" prefHeight="30.0" prefWidth="139.0" style="-fx-background-color: #8c0093; -fx-cursor: hand;" text="Tambah Transaksi" textFill="#fff3f3" />
 
-        <LineChart fx:id="lineChart" animated="true" createSymbols="true" layoutX="40.0" layoutY="76.0" legendVisible="true" prefHeight="177.0" prefWidth="704.0" style="-fx-background-color: white; -fx-border-color: #E0E0E0; -fx-border-width: 1;">
+        <LineChart fx:id="lineChart" animated="true" createSymbols="true" layoutX="40.0" layoutY="80.0" legendVisible="true" prefHeight="185.0" prefWidth="820.0" style="-fx-background-color: white; -fx-border-color: #E0E0E0; -fx-border-width: 1;">
             <xAxis>
                 <CategoryAxis label="" side="BOTTOM" style="-fx-tick-label-font-size: 10px; -fx-tick-label-fill: #666666;" tickLabelsVisible="true" tickMarkVisible="false" />
             </xAxis>
@@ -35,17 +36,17 @@
             </yAxis>
         </LineChart>
 
-        <Label layoutX="274.0" layoutY="30.0" prefHeight="47.0" prefWidth="354.0" text="Daftar Transaksi" textFill="#8c0093">
+        <Label layoutX="320.0" layoutY="30.0" prefHeight="47.0" prefWidth="354.0" text="Daftar Transaksi" textFill="#8c0093">
             <font>
                 <Font name="Arial Black" size="32.0" />
             </font>
         </Label>
 
-        <TextField fx:id="searchField" layoutX="637.0" layoutY="273.0" onAction="#handleFilter" prefHeight="25.0" prefWidth="112.0" promptText="Cari kategori/catatan..." />
-        <Button fx:id="searchButton" layoutX="560.0" layoutY="273.0" mnemonicParsing="false" onAction="#handleFilter" prefHeight="25.0" prefWidth="69.0" style="-fx-cursor: hand;" text="Cari" />
-        <ComboBox fx:id="filterComboBox" layoutX="560.0" layoutY="308.0" onAction="#handleFilter" prefHeight="25.0" prefWidth="129.0" promptText="Filter" style="-fx-cursor: hand;" />
-        <Button fx:id="editButton" layoutX="560.0" layoutY="343.0" mnemonicParsing="false" onAction="#handleEdit" prefHeight="25.0" prefWidth="60.0" style="-fx-background-color: #2196F3; -fx-cursor: hand;" text="Edit" textFill="WHITE" />
-        <Button fx:id="deleteButton" layoutX="632.0" layoutY="343.0" mnemonicParsing="false" onAction="#handleDelete" prefHeight="25.0" prefWidth="60.0" style="-fx-cursor: hand; -fx-background-color: #ea0000;" text="Hapus" textFill="WHITE" />
+        <TextField fx:id="searchField" layoutX="740.0" layoutY="290.0" onAction="#handleFilter" prefHeight="25.0" prefWidth="139.0" promptText="Cari kategori/catatan..." />
+        <Button fx:id="searchButton" layoutX="740.0" layoutY="325.0" mnemonicParsing="false" onAction="#handleFilter" prefHeight="25.0" prefWidth="69.0" style="-fx-cursor: hand;" text="Cari" />
+        <ComboBox fx:id="filterComboBox" layoutX="740.0" layoutY="360.0" onAction="#handleFilter" prefHeight="25.0" prefWidth="139.0" promptText="Filter" style="-fx-cursor: hand;" />
+        <Button fx:id="editButton" layoutX="740.0" layoutY="395.0" mnemonicParsing="false" onAction="#handleEdit" prefHeight="25.0" prefWidth="65.0" style="-fx-background-color: #2196F3; -fx-cursor: hand;" text="Edit" textFill="WHITE" />
+        <Button fx:id="deleteButton" layoutX="814.0" layoutY="395.0" mnemonicParsing="false" onAction="#handleDelete" prefHeight="25.0" prefWidth="65.0" style="-fx-cursor: hand; -fx-background-color: #ea0000;" text="Hapus" textFill="WHITE" />
         <Button fx:id="backButton" layoutX="40.0" layoutY="40.0" mnemonicParsing="false" onAction="#backTo" prefHeight="26.0" prefWidth="74.0" style="-fx-background-color: #007bac; -fx-cursor: hand;" text="Kembali" textFill="WHITE" />
     </children>
 </AnchorPane>
