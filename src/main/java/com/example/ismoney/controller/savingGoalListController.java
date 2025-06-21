@@ -354,22 +354,35 @@ public class savingGoalListController implements Initializable {
                 return;
             }
 
-            // Using user-specific method from SavingGoalDAO
             boolean success = savingGoalDAO.addSavingToGoal(selectedGoal.getGoalId(), amount, currentUserId);
 
             if (success) {
                 showAlert(Alert.AlertType.INFORMATION, "Sukses",
                         "Tabungan berhasil ditambahkan ke " + selectedGoal.getGoalName());
                 addSavingAmountField.clear();
-                loadGoals(); // Refresh data
 
                 // Ambil data goal yang sudah diupdate untuk ngecek status
                 SavingGoal updatedGoal = savingGoalDAO.getSavingGoalById(selectedGoal.getGoalId(), currentUserId);
-                if (updatedGoal != null && updatedGoal.isCompleted()) {
-                    savingGoalDAO.updateGoalStatusBasedOnProgress(selectedGoal.getGoalId(), "COMPLETED", currentUserId);
-                    showAlert(Alert.AlertType.INFORMATION, "Selamat!",
-                            "Target " + selectedGoal.getGoalName() + " telah tercapai! 🎉");
+
+                if (updatedGoal != null) {
+                    // Cek apakah currentAmount sudah >= targetAmount
+                    if (updatedGoal.getCurrentAmount().compareTo(updatedGoal.getTargetAmount()) >= 0) {
+                        // Update status menjadi COMPLETED
+                        boolean statusUpdated = savingGoalDAO.updateGoalStatusBasedOnProgress(
+                                selectedGoal.getGoalId(),
+                                "COMPLETED",
+                                currentUserId
+                        );
+
+                        if (statusUpdated) {
+                            showAlert(Alert.AlertType.INFORMATION, "Selamat!",
+                                    "Target " + selectedGoal.getGoalName() + " telah tercapai! 🎉\n" +
+                                            "Status telah diubah menjadi COMPLETED.");
+                        }
+                    }
                 }
+                loadGoals();
+
             } else {
                 showAlert(Alert.AlertType.ERROR, "Error", "Gagal menambahkan tabungan");
             }
@@ -381,6 +394,33 @@ public class savingGoalListController implements Initializable {
             System.err.println("Error adding saving: " + e.getMessage());
             e.printStackTrace();
             showAlert(Alert.AlertType.ERROR, "Error", "Error: " + e.getMessage());
+        }
+    }
+
+    private void checkAndUpdateGoalStatuses() {
+        try {
+            List<SavingGoal> goals = savingGoalDAO.getSavingGoalsByUserId(currentUserId);
+
+            for (SavingGoal goal : goals) {
+                // Cek apakah goal sudah completed tapi statusnya belum COMPLETED
+                if (goal.getCurrentAmount().compareTo(goal.getTargetAmount()) >= 0
+                        && !"COMPLETED".equals(goal.getStatus())) {
+
+                    // Update status menjadi COMPLETED
+                    boolean statusUpdated = savingGoalDAO.updateGoalStatusBasedOnProgress(
+                            goal.getGoalId(),
+                            "COMPLETED",
+                            currentUserId
+                    );
+
+                    if (statusUpdated) {
+                        System.out.println("Auto-updated goal " + goal.getGoalName() + " to COMPLETED status");
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error checking and updating goal statuses: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -399,7 +439,9 @@ public class savingGoalListController implements Initializable {
             System.out.println("=== DEBUG: Loading saving goals ===");
             System.out.println("Loading saving goals for user ID: " + currentUserId);
 
-            // Using user-specific method from SavingGoalDAO
+            // Cek dan update status goals terlebih dahulu
+            checkAndUpdateGoalStatuses();
+
             List<SavingGoal> goals = savingGoalDAO.getSavingGoalsByUserId(currentUserId);
             allGoals.clear();
             allGoals.addAll(goals);

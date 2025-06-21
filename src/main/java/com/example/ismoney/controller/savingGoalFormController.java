@@ -111,7 +111,7 @@ public class savingGoalFormController {
     }
 
     private void setupFormDefaults() {
-        statusComboBox.getItems().addAll("ACTIVE", "COMPLETED", "PAUSED");
+        statusComboBox.getItems().addAll("ACTIVE", "COMPLETED");
         statusComboBox.setValue("ACTIVE");
 
         currentAmountField.setText("0");
