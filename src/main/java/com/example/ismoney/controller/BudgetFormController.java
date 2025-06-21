@@ -2,6 +2,7 @@ package com.example.ismoney.controller;
 
 import com.example.ismoney.model.Budget;
 import com.example.ismoney.service.BudgetService;
+import com.example.ismoney.util.SceneSwitcher;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -131,8 +132,7 @@ public class BudgetFormController {
                 budgetService.saveBudget(budget);
                 showAlert("Sukses", "Budget berhasil ditambahkan!");
             }
-
-            closeWindow();
+            clearForm();
 
         } catch (SQLException e) {
             showAlert("Error", "Gagal menyimpan budget: " + e.getMessage());
@@ -141,9 +141,19 @@ public class BudgetFormController {
         }
     }
 
+    private void clearForm() {
+        categoryField.clear();
+        limitAmountField.clear();
+        periodComboBox.setValue(null);
+        startDatePicker.setValue(LocalDate.now().plusMonths(1));
+        endDatePicker.setValue(LocalDate.now().plusMonths(1));
+        isActiveCheckBox.setSelected(false);
+    }
+
     @FXML
     private void handleCancel() {
-        closeWindow();
+        clearForm();
+        SceneSwitcher.switchTo("Budget/Budget.fxml", (Stage) cancelButton.getScene().getWindow());
     }
 
     private boolean validateInput() {
@@ -202,10 +212,5 @@ public class BudgetFormController {
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
-    }
-
-    private void closeWindow() {
-        Stage stage = (Stage) saveButton.getScene().getWindow();
-        stage.close();
     }
 }

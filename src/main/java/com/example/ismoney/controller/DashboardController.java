@@ -14,7 +14,6 @@ import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -37,13 +36,11 @@ public class DashboardController {
     @FXML private Button budgetButton;
     @FXML private Button logOutBtn;
 
-    // FXML fields untuk ringkasan keuangan
     @FXML private TextField totalIncomeField;
     @FXML private TextField totalExpenseField;
     @FXML private TextField totalBalanceField;
     @FXML private DatePicker filterDatePicker;
 
-    // FXML fields untuk log aktivitas
     @FXML private TableView<ActivityLog> activityLogTable;
     @FXML private TableColumn<ActivityLog, String> dateColumn;
     @FXML private TableColumn<ActivityLog, String> typeColumn;
@@ -58,7 +55,6 @@ public class DashboardController {
     private User currentUser;
     private Map<Integer, String> categoryCache = new HashMap<>();
 
-    // Auto refresh components
     private Timeline autoRefreshTimeline;
     private static final int REFRESH_INTERVAL_SECONDS = 30;
     private LocalDateTime lastRefreshTime;
@@ -66,26 +62,22 @@ public class DashboardController {
     @FXML
     public void initialize() {
         try {
-            // Initialize DAOs
             transactionDAO = new TransactionDAO();
             savingGoalDAO = new SavingGoalDAO();
             categoryDAO = new CategoryDAO();
             userDAO = new UserDAOImpl();
 
-            // Get current user from session
             if (!initializeCurrentUser()) {
                 showAlert("Error", "Tidak dapat mengidentifikasi user yang sedang login. Silakan login kembali.");
                 handleLogoutButton();
                 return;
             }
 
-            // Setup components
             loadCategoriesCache();
             setupActivityLogTable();
             setupDatePicker();
             setupAutoRefresh();
 
-            // Initial load
             refreshDashboard();
 
             System.out.println("Dashboard initialized for user: " + currentUser.getUsername() + " (ID: " + currentUserId + ")");
@@ -98,7 +90,6 @@ public class DashboardController {
 
     private boolean initializeCurrentUser() {
         try {
-            // Method 1: Get from UserSession (recommended approach)
             currentUserId = UserSession.getCurrentUserId();
             if (currentUserId != null) {
                 currentUser = userDAO.getUserById(currentUserId);
@@ -108,7 +99,6 @@ public class DashboardController {
                 }
             }
 
-            // Method 2: Fallback - redirect to login if no session
             System.out.println("No valid user session found. Redirecting to login.");
             return false;
 
@@ -133,7 +123,6 @@ public class DashboardController {
 
     private void refreshDashboard() {
         try {
-            // Verify user session is still valid
             if (currentUserId == null || !UserSession.isSessionValid()) {
                 System.out.println("Invalid session detected. Logging out...");
                 handleLogoutButton();
@@ -142,12 +131,10 @@ public class DashboardController {
 
             System.out.println("Refreshing dashboard data for user ID: " + currentUserId);
 
-            // Refresh data
             loadCategoriesCache();
             loadFinancialSummary();
             loadActivityLog();
 
-            // Update last refresh time
             lastRefreshTime = LocalDateTime.now();
 
             System.out.println("Dashboard refreshed at: " + lastRefreshTime.format(DateTimeFormatter.ofPattern("HH:mm:ss")));
@@ -161,14 +148,12 @@ public class DashboardController {
     private void setupDatePicker() {
         filterDatePicker.setValue(LocalDate.now());
         filterDatePicker.setOnAction(event -> {
-            // Stop auto refresh temporarily during manual refresh
             if (autoRefreshTimeline != null) {
                 autoRefreshTimeline.stop();
             }
 
             refreshDashboard();
 
-            // Restart auto refresh
             if (autoRefreshTimeline != null) {
                 autoRefreshTimeline.play();
             }
@@ -181,7 +166,6 @@ public class DashboardController {
         descriptionColumn.setCellValueFactory(new PropertyValueFactory<>("description"));
         amountColumn.setCellValueFactory(new PropertyValueFactory<>("amount"));
 
-        // Custom cell factory untuk kolom type dengan warna
         typeColumn.setCellFactory(column -> new TableCell<ActivityLog, String>() {
             @Override
             protected void updateItem(String type, boolean empty) {
@@ -209,7 +193,6 @@ public class DashboardController {
             }
         });
 
-        // Custom cell factory untuk kolom amount dengan format currency
         amountColumn.setCellFactory(column -> new TableCell<ActivityLog, String>() {
             @Override
             protected void updateItem(String amount, boolean empty) {
@@ -245,7 +228,6 @@ public class DashboardController {
                 selectedDate = LocalDate.now();
             }
 
-            // Get transactions for selected month
             List<Transaction> monthlyTransactions = transactionDAO.getTransactionsByUserIdAndMonth(
                     currentUserId, selectedDate.getYear(), selectedDate.getMonthValue());
 
@@ -262,12 +244,10 @@ public class DashboardController {
 
             BigDecimal totalBalance = totalIncome.subtract(totalExpense);
 
-            // Update UI fields
             totalIncomeField.setText("Rp " + String.format("%,.0f", totalIncome.doubleValue()));
             totalExpenseField.setText("Rp " + String.format("%,.0f", totalExpense.doubleValue()));
             totalBalanceField.setText("Rp " + String.format("%,.0f", totalBalance.doubleValue()));
 
-            // Set text color for balance
             if (totalBalance.compareTo(BigDecimal.ZERO) >= 0) {
                 totalBalanceField.setStyle("-fx-text-fill: green; -fx-font-weight: bold;");
             } else {
@@ -284,10 +264,8 @@ public class DashboardController {
         try {
             ObservableList<ActivityLog> activityLogs = FXCollections.observableArrayList();
 
-            // Load recent transactions - ONLY for current user
             List<Transaction> recentTransactions = transactionDAO.getRecentTransactionsByUserId(currentUserId, 8);
             for (Transaction transaction : recentTransactions) {
-                // Double check user ownership
                 if (!Objects.equals(transaction.getUserId(), currentUserId)) {
                     System.err.println("Warning: Skipping transaction " + transaction.getTransactionId() +
                             " - does not belong to current user " + currentUserId);
@@ -310,20 +288,16 @@ public class DashboardController {
                 activityLogs.add(log);
             }
 
-            // Load recent saving goals activities - ONLY for current user
             try {
                 List<SavingGoal> recentGoals = savingGoalDAO.getRecentUpdatedGoalsByUserId(currentUserId, 5);
                 for (SavingGoal goal : recentGoals) {
-                    // Double check user ownership
                     if (!Objects.equals(goal.getUserId(), currentUserId)) {
                         System.err.println("Warning: Skipping saving goal " + goal.getGoalId() +
                                 " - does not belong to current user " + currentUserId);
                         continue;
                     }
 
-                    // Only show goals with actual savings (current_amount > 0)
                     if (goal.getCurrentAmount().compareTo(BigDecimal.ZERO) > 0) {
-                        // Calculate progress percentage
                         double progressPercentage = 0.0;
                         if (goal.getTargetAmount().compareTo(BigDecimal.ZERO) > 0) {
                             progressPercentage = goal.getCurrentAmount()
@@ -332,13 +306,11 @@ public class DashboardController {
                                     .doubleValue();
                         }
 
-                        // Create description with goal name, progress, and target
                         String goalDescription = String.format("Goal: %s (%.1f%% dari target Rp %,.0f)",
                                 goal.getGoalName(),
                                 progressPercentage,
                                 goal.getTargetAmount().doubleValue());
 
-                        // Add status indicator
                         String statusIndicator = "";
                         switch (goal.getStatus()) {
                             case "ACTIVE":
@@ -370,7 +342,6 @@ public class DashboardController {
                 e.printStackTrace();
             }
 
-            // Sort by date (newest first)
             activityLogs.sort((a, b) -> {
                 try {
                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
@@ -382,7 +353,6 @@ public class DashboardController {
                 }
             });
 
-            // Limit to top 15 items for better performance and make it final
             final ObservableList<ActivityLog> finalActivityLogs;
             if (activityLogs.size() > 15) {
                 finalActivityLogs = FXCollections.observableArrayList(activityLogs.subList(0, 15));
@@ -390,7 +360,6 @@ public class DashboardController {
                 finalActivityLogs = activityLogs;
             }
 
-            // Update table di UI thread
             Platform.runLater(() -> {
                 activityLogTable.setItems(finalActivityLogs);
             });
@@ -408,7 +377,6 @@ public class DashboardController {
     private void loadCategoriesCache() {
         try {
             categoryCache.clear();
-            // Load all categories (categories are typically shared across users)
             categoryDAO.getAllCategories().forEach(category ->
                     categoryCache.put(category.getCategoriesId(), category.getName())
             );
@@ -438,7 +406,7 @@ public class DashboardController {
     }
 
     @FXML
-    private void handleBudgetButton(ActionEvent event) {
+    private void handleBudgetButton() {
         try {
             SceneSwitcher.switchTo("Budget/Budget.fxml", (Stage) budgetButton.getScene().getWindow());
         } catch (Exception e) {
@@ -450,12 +418,10 @@ public class DashboardController {
     @FXML
     private void handleLogoutButton() {
         try {
-            // Stop auto refresh before logout
             if (autoRefreshTimeline != null) {
                 autoRefreshTimeline.stop();
             }
 
-            // Clear user session
             UserSession.clearSession();
 
             // Clear current user data
@@ -484,13 +450,6 @@ public class DashboardController {
         });
     }
 
-    // Clean up resources when controller is destroyed
-    public void cleanup() {
-        if (autoRefreshTimeline != null) {
-            autoRefreshTimeline.stop();
-        }
-    }
-
     public static class ActivityLog {
         private final SimpleStringProperty date;
         private final SimpleStringProperty type;
@@ -509,9 +468,6 @@ public class DashboardController {
 
         public String getType() { return type.get(); }
         public void setType(String type) { this.type.set(type); }
-
-        public String getDescription() { return description.get(); }
-        public void setDescription(String description) { this.description.set(description); }
 
         public String getAmount() { return amount.get(); }
         public void setAmount(String amount) { this.amount.set(amount); }

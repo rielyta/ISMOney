@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<AnchorPane prefHeight="650.0" prefWidth="900.0" style="-fx-background-color: radial-gradient(center 50% 50%, radius 100%, #63DBF3 0%, #A2EEF9 60%, #FFFFFF 90%);" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.ismoney.controller.BudgetFormController">
+
+    <!-- Title -->
+    <Label fx:id="titleLabel" layoutX="320.0" layoutY="25.0" text="Form Anggaran" textFill="#8c0093">
+        <font>
+            <Font name="System Bold" size="26.0" />
+        </font>
+    </Label>
+
+    <!-- Form -->
+    <VBox spacing="15.0" AnchorPane.bottomAnchor="20.0" AnchorPane.leftAnchor="50.0" AnchorPane.rightAnchor="50.0" AnchorPane.topAnchor="150.0">
+
+        <HBox>
+            <Label prefHeight="18.0" prefWidth="137.0" text="Kategori" textFill="#333">
+                <font>
+                    <Font name="System Bold" size="12.0" />
+                </font>
+            </Label>
+            <TextField fx:id="categoryField" prefHeight="27.0" prefWidth="405.0" style="-fx-border-color: #ddd;" />
+        </HBox>
+
+        <HBox>
+            <Label prefHeight="18.0" prefWidth="136.0" text="Jumlah Batas (Rp)" textFill="#333">
+                <font>
+                    <Font name="System Bold" size="12.0" />
+                </font>
+            </Label>
+            <TextField fx:id="limitAmountField" prefHeight="27.0" prefWidth="174.0" promptText="0" style="-fx-border-color: #ddd;" />
+        </HBox>
+
+        <HBox>
+            <Label prefHeight="18.0" prefWidth="136.0" text="Periode" textFill="#333">
+                <font>
+                    <Font name="System Bold" size="12.0" />
+                </font>
+            </Label>
+            <ComboBox fx:id="periodComboBox" prefHeight="27.0" prefWidth="175.0" style="-fx-border-color: #ddd; -fx-cursor: hand;" />
+        </HBox>
+
+        <HBox>
+            <Label prefHeight="18.0" prefWidth="136.0" text="Tanggal Mulai" textFill="#333">
+                <font>
+                    <Font name="System Bold" size="12.0" />
+                </font>
+            </Label>
+            <DatePicker fx:id="startDatePicker" prefHeight="27.0" prefWidth="135.0" style="-fx-border-color: #ddd;" />
+        </HBox>
+
+        <HBox>
+            <Label prefHeight="18.0" prefWidth="135.0" text="Tanggal Akhir" textFill="#333">
+                <font>
+                    <Font name="System Bold" size="12.0" />
+                </font>
+            </Label>
+            <DatePicker fx:id="endDatePicker" prefHeight="27.0" prefWidth="135.0" style="-fx-border-color: #ddd;" />
+        </HBox>
+
+        <HBox>
+            <Label prefHeight="18.0" prefWidth="134.0" text="Aktif?" textFill="#333">
+                <font>
+                    <Font name="System Bold" size="12.0" />
+                </font>
+            </Label>
+            <CheckBox fx:id="isActiveCheckBox" />
+        </HBox>
+
+        <!-- Tombol -->
+        <HBox alignment="CENTER_RIGHT" spacing="15.0">
+            <Button fx:id="saveButton" onMouseClicked="#handleSave" prefHeight="30.0" prefWidth="120.0" style="-fx-background-color: #8c0093; -fx-text-fill: white; -fx-background-radius: 8; -fx-font-weight: bold; -fx-cursor: hand;" text="Simpan" />
+            <Button fx:id="cancelButton" onMouseClicked="#handleCancel" prefHeight="30.0" prefWidth="120.0" style="-fx-background-color: #ea0000; -fx-text-fill: white; -fx-background-radius: 8; -fx-font-weight: bold; -fx-cursor: hand;" text="Batal" />
+        </HBox>
+
+    </VBox>
+</AnchorPane>

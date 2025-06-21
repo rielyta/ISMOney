@@ -2,6 +2,7 @@ package com.example.ismoney.controller;
 
 import com.example.ismoney.database.DatabaseConfig;
 import com.example.ismoney.model.Budget;
+import com.example.ismoney.util.SceneSwitcher;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -14,6 +15,7 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.stage.Stage;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -35,6 +37,7 @@ public class BudgetController {
     @FXML private TableColumn<Budget, Void> actionColumn;
 
     @FXML private Button addBudgetBtn;
+    @FXML private Button backButton;
     @FXML private ComboBox<String> filterPeriodBox;
     @FXML private CheckBox showActiveOnlyBox;
 
@@ -346,4 +349,9 @@ public class BudgetController {
         alert.setContentText(message);
         alert.showAndWait();
     }
-} // End of BudgetController
+
+    @FXML
+    private void backTo() {
+        SceneSwitcher.switchTo("Dashboard.fxml", (Stage) backButton.getScene().getWindow());
+    }
+}

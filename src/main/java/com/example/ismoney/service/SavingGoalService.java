@@ -25,24 +25,9 @@ public class SavingGoalService {
         savingGoalDAO.addSavingGoal(savingGoal);
     }
 
-    // READ - Mengambil semua goal berdasarkan user
-    public List<SavingGoal> getSavingGoalsByUserId(Integer userId) throws SQLException {
-        return savingGoalDAO.getSavingGoalsByUserId(userId);
-    }
-
     // READ - Mengambil goal aktif berdasarkan user
     public List<SavingGoal> getActiveSavingGoalsByUserId(Integer userId) throws SQLException {
         return savingGoalDAO.getActiveSavingGoalsByUserId(userId);
-    }
-
-    // READ - Mengambil goal berdasarkan ID dan user
-    public SavingGoal getSavingGoalById(int goalId, Integer userId) throws SQLException {
-        return savingGoalDAO.getSavingGoalById(goalId, userId);
-    }
-
-    // READ - Mengambil recent updated goals berdasarkan user
-    public List<SavingGoal> getRecentUpdatedGoalsByUserId(Integer userId, int limit) throws SQLException {
-        return savingGoalDAO.getRecentUpdatedGoalsByUserId(userId, limit);
     }
 
     // UPDATE - Memperbarui goal
@@ -58,16 +43,6 @@ public class SavingGoalService {
             throw new IllegalArgumentException("Amount must be positive");
         }
         savingGoalDAO.addSavingToGoal(goalId, BigDecimal.valueOf(amount), userId);
-    }
-
-    // DELETE - Menghapus goal
-    public void deleteSavingGoal(int goalId, Integer userId) throws SQLException {
-        savingGoalDAO.deleteSavingGoal(goalId, userId);
-    }
-
-    // UPDATE - Menyelesaikan goal
-    public void completeSavingGoal(int goalId, Integer userId) throws SQLException {
-        savingGoalDAO.updateGoalStatusBasedOnProgress(goalId, "COMPLETED", userId);
     }
 
     // CALCULATION - Menghitung tabungan harian yang diperlukan

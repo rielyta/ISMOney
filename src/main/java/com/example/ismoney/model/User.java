@@ -50,17 +50,8 @@ public class User {
         this.passwordHash = passwordHash;
     }
 
-    public Timestamp getCreatedAt() {
-        return createdAt;
-    }
-
     public void setCreatedAt(Timestamp createdAt) {
         this.createdAt = createdAt;
-    }
-
-    // Added missing getter and setter for lastLogin
-    public Timestamp getLastLogin() {
-        return lastLogin;
     }
 
     public void setLastLogin(Timestamp lastLogin) {

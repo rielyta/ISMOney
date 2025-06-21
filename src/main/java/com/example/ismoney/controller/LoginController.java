@@ -41,17 +41,13 @@ public class LoginController {
 
     @FXML
     public void initialize() {
-        // Clear any existing session when login page loads
         UserSession.clearSession();
 
-        // Clear system property as well (for backward compatibility)
         System.clearProperty("current.user.id");
 
-        // Reset login attempts and lockout state
         loginAttempts = 0;
         isLockedOut = false;
 
-        // Hide messages initially
         hideMessages();
 
         logger.info("Login page initialized, all sessions cleared");
@@ -59,7 +55,6 @@ public class LoginController {
 
     @FXML
     protected void onLogin() {
-        // Prevent login if locked out
         if (isLockedOut) {
             showError("Akun terkunci. Silakan tunggu beberapa saat sebelum mencoba lagi.");
             return;
@@ -69,7 +64,6 @@ public class LoginController {
         setButtonState(false);
 
         try {
-            // Validate input
             String emailOrUsername = emailOrUsernameField.getText();
             String password = passwordField.getText();
 
@@ -77,7 +71,6 @@ public class LoginController {
                 return;
             }
 
-            // Perform authentication
             User authenticatedUser = userDAO.authenticateUser(emailOrUsername.trim(), password);
 
             if (authenticatedUser == null) {
@@ -85,7 +78,6 @@ public class LoginController {
                 return;
             }
 
-            // Login successful
             handleSuccessfulLogin(authenticatedUser);
 
         } catch (Exception e) {
@@ -114,7 +106,6 @@ public class LoginController {
             return false;
         }
 
-        // Check if input is too long (prevent potential security issues)
         if (emailOrUsername.length() > 255 || password.length() > 255) {
             showError("Input terlalu panjang.");
             loginAttempts++;
@@ -149,30 +140,22 @@ public class LoginController {
 
     private void handleSuccessfulLogin(User authenticatedUser) {
         try {
-            // Update last login time in database
             userDAO.updateLastLogin(authenticatedUser.getId());
 
-            // Create user session
             UserSession.setUserSession(authenticatedUser.getId(), authenticatedUser.getUsername());
 
-            // Set system property for backward compatibility
             System.setProperty("current.user.id", String.valueOf(authenticatedUser.getId()));
 
-            // Reset login attempts
             loginAttempts = 0;
             isLockedOut = false;
 
-            // Show success message
             showSuccess("Login berhasil! Selamat datang, " + authenticatedUser.getUsername() + "!");
 
-            // Clear password field for security
             passwordField.clear();
 
-            // Log successful login
             logger.info("User logged in successfully: " + authenticatedUser.getUsername() +
                     " (ID: " + authenticatedUser.getId() + ")");
 
-            // Navigate to dashboard after short delay
             navigateToDashboard();
 
         } catch (Exception e) {
@@ -187,7 +170,6 @@ public class LoginController {
         Task<Void> navigationTask = new Task<Void>() {
             @Override
             protected Void call() throws Exception {
-                // Wait for 1 second to show success message
                 Thread.sleep(1000);
                 return null;
             }
@@ -196,7 +178,6 @@ public class LoginController {
             protected void succeeded() {
                 Platform.runLater(() -> {
                     try {
-                        // Verify session is still valid before navigation
                         if (!UserSession.isSessionValid()) {
                             showError("Session tidak valid. Silakan login kembali.");
                             return;
@@ -255,7 +236,6 @@ public class LoginController {
             protected void failed() {
                 Platform.runLater(() -> {
                     logger.severe("Lockout task failed: " + getException().getMessage());
-                    // Reset state even if task failed
                     loginAttempts = 0;
                     isLockedOut = false;
                     setButtonState(true);
@@ -273,7 +253,6 @@ public class LoginController {
     @FXML
     private void onSignupClick() {
         try {
-            // Clear any existing session before going to register
             UserSession.clearSession();
             System.clearProperty("current.user.id");
 
