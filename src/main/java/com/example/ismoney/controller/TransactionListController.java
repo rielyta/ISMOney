@@ -378,7 +378,6 @@ public class TransactionListController {
         lineChart.applyCss();
         lineChart.layout();
 
-
         if (!lineChart.getData().isEmpty()) {
             lineChart.getData().get(0).getNode().setStyle("-fx-stroke: #4A90E2; -fx-stroke-width: 3px;");
 
