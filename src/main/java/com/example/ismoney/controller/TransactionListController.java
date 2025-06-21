@@ -10,6 +10,9 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
@@ -367,7 +370,6 @@ public class TransactionListController {
         lineChart.applyCss();
         lineChart.layout();
 
-
         if (!lineChart.getData().isEmpty()) {
             lineChart.getData().get(0).getNode().setStyle("-fx-stroke: #4A90E2; -fx-stroke-width: 3px;");
 
@@ -429,25 +431,41 @@ public class TransactionListController {
         }
     }
 
+
+
     @FXML
     private void handleEdit() {
         Transaction selectedTransaction = transactionTable.getSelectionModel().getSelectedItem();
         if (selectedTransaction != null) {
             try {
-                SceneSwitcher.switchTo("Transaction/TransactionEditForm.fxml", (Stage) editButton.getScene().getWindow());
+                System.out.println("=== DEBUG: Opening edit form ===");
+                System.out.println("Selected transaction ID: " + selectedTransaction.getTransactionId());
+                System.out.println("Selected transaction amount: " + selectedTransaction.getAmount());
+                System.out.println("Selected transaction type: " + selectedTransaction.getType());
+                System.out.println("Selected transaction category ID: " + selectedTransaction.getCategoryId());
 
-                // Refresh semua data setelah edit
-                loadCategoriesCache(); // Refresh categories cache
-                loadTransactions();    // Refresh transactions
-                updateChart();         // Update chart
 
-                System.out.println("Data refreshed after edit");
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/ismoney/Transaction/TransactionEditForm.fxml"));
+                Parent root = loader.load();
+
+                TransactionEditFormController editController = loader.getController();
+
+                editController.setTransaction(selectedTransaction);
+
+                Stage currentStage = (Stage) editButton.getScene().getWindow();
+                Scene editScene = new Scene(root);
+                currentStage.setScene(editScene);
+                currentStage.setTitle("ISMoney - Edit Transaksi");
+
+                System.out.println("Successfully opened edit form with transaction data");
 
             } catch (Exception e) {
                 System.err.println("Error opening edit form: " + e.getMessage());
                 e.printStackTrace();
                 showAlert("Kesalahan", "Gagal membuka form edit: " + e.getMessage());
             }
+        } else {
+            showAlert("Peringatan", "Pilih transaksi yang akan diedit terlebih dahulu.");
         }
     }
 

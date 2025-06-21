@@ -1,18 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.TableColumn?>
-<?import javafx.scene.control.TableView?>
-<?import javafx.scene.control.TextField?>
-<?import javafx.scene.layout.AnchorPane?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.Region?>
-<?import javafx.scene.layout.VBox?>
-<?import javafx.scene.text.Font?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
 
-<AnchorPane prefHeight="491.0" prefWidth="756.0" style="-fx-background-color: radial-gradient(center 50% 50%, radius 100%, #63DBF3 0%, #A2EEF9 60%, #FFFFFF 90%);" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.ismoney.controller.savingGoalListController">
-    <Label layoutX="232.0" layoutY="25.0" text="Daftar Target Tabungan" textFill="#8c0093">
+<AnchorPane prefHeight="650.0" prefWidth="900.0" style="-fx-background-color: radial-gradient(center 50% 50%, radius 100%, #63DBF3 0%, #A2EEF9 60%, #FFFFFF 90%);" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.ismoney.controller.savingGoalListController">
+    <Label layoutX="320.0" layoutY="25.0" text="Daftar Target Tabungan" textFill="#8c0093">
         <font>
             <Font name="System Bold" size="26.0" />
         </font>
@@ -28,11 +21,16 @@
             <TextField fx:id="addSavingAmountField" prefWidth="150.0" promptText="Nominal" style=" -fx-border-color: #ddd;" />
             <Button fx:id="addSavingButton" prefHeight="30.0" style="-fx-background-color: #8c0093; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-weight: bold; -fx-cursor: hand;" text="Update" />
             <Button fx:id="GoalFormButton" prefHeight="30.0" style="-fx-background-color: #A110A8; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-weight: bold; -fx-cursor: hand;" text="Tambah" />
-            <Region HBox.hgrow="ALWAYS" />
+
             <Button fx:id="refreshButton" prefHeight="30.0" style="-fx-background-color: #2196F3; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;" text="Perbarui" />
         </HBox>
-        <VBox style="-fx-background-color: white; -fx-background-radius: 10; -fx-padding: 20;" VBox.vgrow="ALWAYS">
-            <TableView fx:id="goalTableView" VBox.vgrow="ALWAYS">
+        <HBox>
+            <TextField fx:id="searchField" layoutX="637.0" layoutY="273.0" onAction="#handleFilter" prefHeight="25.0" prefWidth="710.0" promptText="Cari nama target..." />
+            <Region HBox.hgrow="ALWAYS" />
+            <Button fx:id="searchButton" layoutX="560.0" layoutY="273.0" mnemonicParsing="false" onAction="#handleFilter" prefHeight="25.0" prefWidth="69.0" style="-fx-cursor: hand;" text="Cari" />
+        </HBox>
+        <VBox VBox.vgrow="ALWAYS">
+            <TableView fx:id="goalTableView" prefHeight="397.0" prefWidth="751.0" VBox.vgrow="ALWAYS">
                 <columns>
                     <TableColumn fx:id="goalNameColumn" prefWidth="150.0" text="Nama Target" />
                     <TableColumn fx:id="targetAmountColumn" prefWidth="120.0" text="Target Jumlah" />
