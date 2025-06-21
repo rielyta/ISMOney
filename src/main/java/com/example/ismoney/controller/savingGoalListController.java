@@ -152,7 +152,6 @@ public class savingGoalListController implements Initializable {
             addSavingAmountField.requestFocus();
             return;
         }
-
         try {
             BigDecimal amount = new BigDecimal(addSavingAmountField.getText().trim());
 
@@ -169,8 +168,11 @@ public class savingGoalListController implements Initializable {
                 addSavingAmountField.clear();
                 loadGoals(); // Refresh data
 
-                // Update status otomatis
-                savingGoalDAO.updateGoalStatusBasedOnProgress();
+                // Ambil data goal yang sudah diupdate untuk mengecek status
+                SavingGoal updatedGoal = savingGoalDAO.getSavingGoalById(selectedGoal.getGoalId());
+                if (updatedGoal != null && updatedGoal.isCompleted()) {
+                    savingGoalDAO.updateGoalStatusBasedOnProgress(selectedGoal.getGoalId(), "COMPLETED");
+                }
             } else {
                 showAlert(Alert.AlertType.ERROR, "Error", "Gagal menambahkan tabungan");
             }

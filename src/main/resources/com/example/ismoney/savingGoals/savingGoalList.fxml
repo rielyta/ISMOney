@@ -4,8 +4,8 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<AnchorPane prefHeight="491.0" prefWidth="756.0" style="-fx-background-color: #63DBF3;" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.ismoney.controller.savingGoalListController">
-    <Label layoutX="232.0" layoutY="25.0" text="Daftar Target Tabungan" textFill="WHITE">
+<AnchorPane prefHeight="491.0" prefWidth="756.0" style="-fx-background-color: radial-gradient(center 50% 50%, radius 100%, #63DBF3 0%, #A2EEF9 60%, #FFFFFF 90%);" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.ismoney.controller.savingGoalListController">
+    <Label layoutX="232.0" layoutY="25.0" text="Daftar Target Tabungan" textFill="#8c0093">
         <font>
             <Font name="System Bold" size="26.0" />
         </font>

@@ -14,6 +14,13 @@ public class SavingGoal {
     private String description;
     private String status;
 
+    public SavingGoal() {
+        // Inisialisasi default values jika diperlukan
+        this.currentAmount = BigDecimal.ZERO;
+        this.createdDate = LocalDate.now();
+        this.status = "ACTIVE";
+    }
+
     // Constructor tambahan untuk pemanggilan dari DAO
     public SavingGoal(Integer goalId, String goalName, BigDecimal targetAmount, BigDecimal currentAmount,
                       LocalDate targetDate, LocalDate createdDate, String status) {
@@ -54,11 +61,11 @@ public class SavingGoal {
 
     public String getProgressStatus() {
         if (isCompleted()) {
-            return "COMPLETED";
+            return "SELESAI";
         } else if (isOverdue()) {
-            return "OVERDUE";
+            return "TERLAMBAT";
         } else {
-            return "IN_PROGRESS";
+            return "DALAM_PROGRES";
         }
     }
 

@@ -37,7 +37,7 @@ public class SavingGoalDAO {
 
     // method utk update status otomatis berdasarkan progres
     public void updateGoalStatusBasedOnProgress(int goalId, String status) {
-        String sql = "UPDATE saving_goals SET status = ? WHERE id = ?";
+        String sql = "UPDATE saving_goals SET status = ? WHERE goal_id = ?";  // Ubah dari 'id' ke 'goal_id'
 
         try (Connection conn = dbConfig.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -191,22 +191,22 @@ public class SavingGoalDAO {
 
     public List<SavingGoal> getActiveSavingGoals() throws SQLException {
         List<SavingGoal> savingGoals = new ArrayList<>();
-        String sql = "SELECT * FROM saving_goals WHERE status = 'active' ORDER BY target_date ASC";
+        String sql = "SELECT goal_id, goal_name, target_amount, current_amount, target_date, created_date, description, status FROM saving_goals WHERE status = 'ACTIVE' ORDER BY target_date ASC";
 
-        try (Connection conn = DatabaseConfig.getConnection();
+        try (Connection conn = dbConfig.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    SavingGoal savingGoal = new SavingGoal(
-                            rs.getInt("id"),
-                            rs.getString("name"),
-                            rs.getDouble("target_amount"),
-                            rs.getDouble("current_amount"),
-                            rs.getDate("target_date").toLocalDate(),
-                            rs.getDate("created_date").toLocalDate(),
-                            rs.getString("status")
-                    );
+                    SavingGoal savingGoal = new SavingGoal();
+                    savingGoal.setGoalId(rs.getInt("goal_id"));
+                    savingGoal.setGoalName(rs.getString("goal_name"));
+                    savingGoal.setTargetAmount(rs.getBigDecimal("target_amount"));
+                    savingGoal.setCurrentAmount(rs.getBigDecimal("current_amount"));
+                    savingGoal.setTargetDate(rs.getDate("target_date").toLocalDate());
+                    savingGoal.setCreatedDate(rs.getDate("created_date").toLocalDate());
+                    savingGoal.setDescription(rs.getString("description"));
+                    savingGoal.setStatus(rs.getString("status"));
                     savingGoals.add(savingGoal);
                 }
             }

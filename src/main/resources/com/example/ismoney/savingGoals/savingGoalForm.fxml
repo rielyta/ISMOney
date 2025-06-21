@@ -6,9 +6,9 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<AnchorPane prefHeight="491.0" prefWidth="756.0" style="-fx-background-color: #63DBF3;" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.ismoney.controller.savingGoalFormController">
+<AnchorPane prefHeight="491.0" prefWidth="756.0" style="-fx-background-color:  radial-gradient(center 50% 50%, radius 100%, #63DBF3 0%, #A2EEF9 60%, #FFFFFF 90%);" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.ismoney.controller.savingGoalFormController">
 
-    <Label layoutX="255.0" layoutY="25.0" text="Form Target Tabungan" textFill="WHITE">
+    <Label layoutX="255.0" layoutY="25.0" text="Form Target Tabungan" textFill="#8c0093">
         <font>
             <Font name="System Bold" size="26.0" />
         </font>
@@ -23,7 +23,7 @@
             <TextField fx:id="goalNameField" prefHeight="27.0" prefWidth="366.0" style=" -fx-border-color: #ddd;" />
         </HBox>
 
-        <HBox spacing="35.0">
+        <HBox spacing="51.0">
             <Label text="Target Jumlah (Rp)" textFill="#333">
                 <font>
                     <Font name="System Bold" size="12.0" />
@@ -31,7 +31,7 @@
             </Label>
             <TextField fx:id="targetAmountField" prefHeight="27.0" prefWidth="174.0" promptText="0" style="-fx-border-color: #ddd;" />
         </HBox>
-        <HBox spacing="30.0">
+        <HBox spacing="47.0">
             <Label text="Jumlah Saat Ini (Rp)" textFill="#333">
                 <font>
                     <Font name="System Bold" size="12.0" />
@@ -39,7 +39,7 @@
             </Label>
             <TextField fx:id="currentAmountField" prefHeight="27.0" prefWidth="173.0" promptText="0" style="-fx-border-color: #ddd;" />
         </HBox>
-        <HBox spacing="83.0">
+        <HBox spacing="75.0">
             <Label text="Target Tanggal" textFill="#333">
                 <font>
                     <Font name="System Bold" size="12.0" />
@@ -47,7 +47,7 @@
             </Label>
             <DatePicker fx:id="targetDatePicker" prefHeight="27.0" prefWidth="135.0" style="-fx-border-color: #ddd;" />
         </HBox>
-        <HBox spacing="115.0">
+        <HBox spacing="126.0">
             <Label text="Status" textFill="#333">
                 <font>
                     <Font name="System Bold" size="12.0" />
