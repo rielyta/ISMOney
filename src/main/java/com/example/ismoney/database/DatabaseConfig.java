@@ -22,7 +22,7 @@ public class DatabaseConfig {
         return instance;
     }
 
-    public Connection getConnection() throws SQLException {
+    public static Connection getConnection() throws SQLException {
         try {
             Class.forName("org.postgresql.Driver");
 

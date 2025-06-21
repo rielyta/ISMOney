@@ -1,11 +1,17 @@
 package com.example.ismoney.controller;
 
 import com.example.ismoney.dao.SavingGoalDAO;
-import com.example.ismoney.model.savingGoal;
+import com.example.ismoney.model.SavingGoal;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URL;
 import java.time.LocalDate;
@@ -21,14 +27,13 @@ public class savingGoalFormController implements Initializable {
     @FXML private Button simpanButton;
     @FXML private Button batalButton;
 
-    // Progress display elements
     @FXML private ProgressBar progressBar;
     @FXML private Label progressLabel;
     @FXML private Label remainingLabel;
     @FXML private Label statusLabel;
 
     private SavingGoalDAO savingGoalDAO;
-    private savingGoal currentGoal;
+    private SavingGoal currentGoal;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -40,7 +45,7 @@ public class savingGoalFormController implements Initializable {
     }
 
     private void setupStatusComboBox() {
-        statusComboBox.getItems().addAll("ACTIVE", "COMPLETED", "PAUSED", "CANCELLED");
+        statusComboBox.getItems().addAll("ACTIVE", "COMPLETED", "PAUSED");
         statusComboBox.setValue("ACTIVE");
     }
 
@@ -101,7 +106,7 @@ public class savingGoalFormController implements Initializable {
                 return;
             }
 
-            savingGoal goal = currentGoal != null ? currentGoal : new savingGoal();
+            SavingGoal goal = currentGoal != null ? currentGoal : new SavingGoal();
 
             goal.setGoalName(goalNameField.getText().trim());
             goal.setTargetAmount(new BigDecimal(targetAmountField.getText().trim()));
@@ -185,7 +190,7 @@ public class savingGoalFormController implements Initializable {
         updateProgressDisplay();
     }
 
-    public void setGoalForEdit(savingGoal goal) {
+    public void setGoalForEdit(SavingGoal goal) {
         this.currentGoal = goal;
         goalNameField.setText(goal.getGoalName());
         targetAmountField.setText(goal.getTargetAmount().toString());

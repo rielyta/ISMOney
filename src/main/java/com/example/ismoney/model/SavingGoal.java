@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 
-public class savingGoal {
+public class SavingGoal {
     private Integer goalId;
     private String goalName;
     private BigDecimal targetAmount;
@@ -14,10 +14,16 @@ public class savingGoal {
     private String description;
     private String status;
 
-    public savingGoal() {
-        this.currentAmount = BigDecimal.ZERO;
-        this.createdDate = LocalDate.now();
-        this.status = "ACTIVE";
+    // Constructor tambahan untuk pemanggilan dari DAO
+    public SavingGoal(Integer goalId, String goalName, BigDecimal targetAmount, BigDecimal currentAmount,
+                      LocalDate targetDate, LocalDate createdDate, String status) {
+        this.goalId = goalId;
+        this.goalName = goalName;
+        this.targetAmount = targetAmount;
+        this.currentAmount = currentAmount;
+        this.targetDate = targetDate;
+        this.createdDate = createdDate;
+        this.status = status;
     }
 
     @Override

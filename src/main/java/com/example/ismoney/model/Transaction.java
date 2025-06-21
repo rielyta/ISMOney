@@ -5,42 +5,32 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public class Transaction {
-    private Integer transactionId;  // Sesuai dengan database (transaction_id)
-    private Integer userId;         // Sesuai dengan database (user_id)
-    private BigDecimal amount;      // Sesuai dengan DECIMAL di database
-    private TransactionType type;
-    private Integer categoryId;     // Sesuai dengan database (category_id)
+    private int transactionId;
+    private int userId;
+    private BigDecimal amount;
+    private TransactionType type; // enum
+    private int categoryId;
     private String note;
     private LocalDate transactionDate;
     private LocalDateTime createdAt;
 
+    // Constructor kosong
     public Transaction() {}
 
-    public Transaction(Integer transactionId, Integer userId, BigDecimal amount,
-                       TransactionType type, Integer categoryId, String note, LocalDate transactionDate) {
-        this.transactionId = transactionId;
-        this.userId = userId;
-        this.amount = amount;
-        this.type = type;
-        this.categoryId = categoryId;
-        this.note = note;
-        this.transactionDate = transactionDate;
-    }
-
     // Getters and Setters
-    public Integer getTransactionId() {
+    public int getTransactionId() {
         return transactionId;
     }
 
-    public void setTransactionId(Integer transactionId) {
+    public void setTransactionId(int transactionId) {
         this.transactionId = transactionId;
     }
 
-    public Integer getUserId() {
+    public int getUserId() {
         return userId;
     }
 
-    public void setUserId(Integer userId) {
+    public void setUserId(int userId) {
         this.userId = userId;
     }
 
@@ -60,11 +50,11 @@ public class Transaction {
         this.type = type;
     }
 
-    public Integer getCategoryId() {
+    public int getCategoryId() {
         return categoryId;
     }
 
-    public void setCategoryId(Integer categoryId) {
+    public void setCategoryId(int categoryId) {
         this.categoryId = categoryId;
     }
 
@@ -96,11 +86,23 @@ public class Transaction {
     public String toString() {
         return "Transaction{" +
                 "transactionId=" + transactionId +
+                ", userId=" + userId +
                 ", amount=" + amount +
                 ", type=" + type +
                 ", categoryId=" + categoryId +
                 ", note='" + note + '\'' +
                 ", transactionDate=" + transactionDate +
+                ", createdAt=" + createdAt +
                 '}';
+    }
+
+    private String category;
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
     }
 }

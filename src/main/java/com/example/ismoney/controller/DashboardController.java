@@ -7,60 +7,119 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import java.io.IOException;
-import java.util.Optional;
+import java.net.URL;
 
 public class DashboardController {
 
     @FXML private Button transactionButton;
     @FXML private Button savingGoalButton;
+    @FXML private Button GoalsListButton;
     @FXML private Button logOutBtn;
 
     @FXML
     public void initialize() {
+        // Inisialisasi komponen jika diperlukan
     }
 
     @FXML
     private void handleTransactionButton() {
         try {
-            // Load the FXML file for transaction form
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/ismoney/Transaction/TransactionForm.fxml"));
+            String[] possiblePaths = {
+                    "/com/example/ismoney/Transaction/TransactionList.fxml",
+                    "/Transaction/TransactionList.fxml",
+                    "/TransactionList.fxml",
+                    "Transaction/TransactionList.fxml",
+                    "TransactionList.fxml"
+            };
+
+            URL fxmlUrl = null;
+            String workingPath = null;
+
+            for (String path : possiblePaths) {
+                fxmlUrl = getClass().getResource(path);
+                if (fxmlUrl != null) {
+                    workingPath = path;
+                    System.out.println("Found FXML at: " + path);
+                    break;
+                } else {
+                    System.out.println("FXML not found at: " + path);
+                }
+            }
+
+            if (fxmlUrl == null) {
+                showAlert("Kesalahan", "File FXML tidak ditemukan di semua lokasi yang dicoba.\n\nPastikan file TransactionList.fxml atau TransactionForm.fxml ada di folder resources.");
+                return;
+            }
+
+            FXMLLoader loader = new FXMLLoader(fxmlUrl);
             Parent root = loader.load();
 
             Stage transactionStage = new Stage();
-            transactionStage.setTitle("Tambah Transaksi");
+            transactionStage.setTitle(workingPath.contains("List") ? "Daftar Transaksi" : "Tambah Transaksi");
             transactionStage.setScene(new Scene(root));
 
             transactionStage.initModality(Modality.APPLICATION_MODAL);
 
-            // Show the transaction form and wait for it to be closed
             transactionStage.showAndWait();
 
         } catch (IOException e) {
-            showAlert("Error", "Gagal membuka form transaksi: " + e.getMessage());
+            showAlert("Kesalahan", "Gagal membuka form: " + e.getMessage());
+            e.printStackTrace();
+        } catch (Exception e) {
+            showAlert("Kesalahan", "Terjadi kesalahan tidak terduga: " + e.getMessage());
             e.printStackTrace();
         }
     }
 
     @FXML
-    private void handleSavingGoalButton() {
-        try{
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/ismoney/SavingGoal/SavingGoal.fxml"));
+    private void handleGoalsListButton() {
+        try {
+            String[] possiblePaths = {
+                    "/com/example/ismoney/savingGoals/savingGoalList.fxml",
+                    "/savingGoals/savingGoalList.fxml",
+                    "/savingGoalList.fxml",
+                    "savingGoals/savingGoalList.fxml",
+                    "savingGoalList.fxml"
+            };
+
+            URL fxmlUrl = null;
+            String workingPath = null;
+
+            for (String path : possiblePaths) {
+                fxmlUrl = getClass().getResource(path);
+                if (fxmlUrl != null) {
+                    workingPath = path;
+                    System.out.println("Found SavingGoalList FXML at: " + path);
+                    break;
+                } else {
+                    System.out.println("SavingGoal FXML not found at: " + path);
+                }
+            }
+
+            if (fxmlUrl == null) {
+                showAlert("Info", "File SavingGoal FXML tidak ditemukan.");
+                return;
+            }
+
+            FXMLLoader loader = new FXMLLoader(fxmlUrl);
             Parent root = loader.load();
 
-            Stage GoalsStage = new Stage();
-            GoalsStage.setTitle("Saving Goals Anda");
-            GoalsStage.setScene(new Scene(root));
-            GoalsStage.initModality(Modality.APPLICATION_MODAL);
+            Stage goalsStage = new Stage();
+            goalsStage.setTitle("Target Tabungan Anda");
+            goalsStage.setScene(new Scene(root));
+            goalsStage.initModality(Modality.APPLICATION_MODAL);
 
-            GoalsStage.showAndWait();
+            goalsStage.showAndWait();
 
         } catch (IOException e) {
-            showAlert("Error", "Gagal membuka form saving goals: " + e.getMessage());
+            showAlert("Kesalahan", "Gagal membuka list target tabungan: " + e.getMessage());
+            e.printStackTrace();
+        } catch (Exception e) {
+            showAlert("Kesalahan", "Terjadi kesalahan tidak terduga: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -72,7 +131,6 @@ public class DashboardController {
         alert.setContentText(message);
         alert.showAndWait();
     }
-
     @FXML
     private void handleLogoutButton() {
         Stage currentStage = (Stage) logOutBtn.getScene().getWindow();
