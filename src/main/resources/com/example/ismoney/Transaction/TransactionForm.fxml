@@ -53,5 +53,6 @@
       </Pane>
       <Button layoutX="358.0" layoutY="435.0" mnemonicParsing="false" onAction="#handleSaveTransaction" prefHeight="25.0" prefWidth="133.0" style="-fx-background-color: #8c0093;" text="Simpan" textFill="WHITE" />
       <Button fx:id="handleCancel" layoutX="504.0" layoutY="435.0" mnemonicParsing="false" onAction="#handleCancel" prefHeight="25.0" prefWidth="127.0" text="Batal" />
+      <Button fx:id="backButton" layoutX="28.0" layoutY="53.0" mnemonicParsing="false" onAction="#backToDashboard" prefHeight="26.0" prefWidth="74.0" style="-fx-background-color: #025d6b;" text="Kembali" textFill="WHITE" />
    </children>
 </AnchorPane>

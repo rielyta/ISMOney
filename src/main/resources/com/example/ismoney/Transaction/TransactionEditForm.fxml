@@ -12,7 +12,7 @@
 
 <AnchorPane prefHeight="498.0" prefWidth="780.0" style="-fx-background-color: radial-gradient(center 50% 50%, radius 100%, #63DBF3 0%, #A2EEF9 60%, #FFFFFF 90%);" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.ismoney.controller.TransactionEditFormController">
     <children>
-        <Label layoutX="212.0" layoutY="43.0" prefHeight="47.0" prefWidth="354.0" text="Edit Transaksi" textFill="#8c0093">
+        <Label layoutX="251.0" layoutY="43.0" prefHeight="47.0" prefWidth="256.0" text="Edit Transaksi" textFill="#8c0093">
             <font>
                 <Font name="Arial Black" size="32.0" />
             </font>
@@ -53,5 +53,6 @@
         </Pane>
         <Button layoutX="358.0" layoutY="435.0" mnemonicParsing="false" onAction="#handleSaveTransaction" prefHeight="25.0" prefWidth="133.0" style="-fx-background-color: #8c0093;" text="Perbarui" textFill="WHITE" />
         <Button layoutX="504.0" layoutY="435.0" mnemonicParsing="false" onAction="#handleCancel" prefHeight="25.0" prefWidth="127.0" text="Batal" />
+      <Button fx:id="backButton" layoutX="41.0" layoutY="53.0" mnemonicParsing="false" onAction="#backToDashboard" prefHeight="26.0" prefWidth="74.0" style="-fx-background-color: #025d6b;" text="Kembali" textFill="WHITE" />
     </children>
 </AnchorPane>
