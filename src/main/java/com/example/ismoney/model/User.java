@@ -1,4 +1,4 @@
-package com.example.ismoney.model.user;
+package com.example.ismoney.model;
 
 import java.sql.Timestamp;
 
@@ -8,7 +8,6 @@ public class User {
     private String email;
     private String passwordHash;
     private Timestamp createdAt;
-    private Timestamp lastLogin;
 
     public User(String username, String email, String passwordHash) {
         this.username = username;
@@ -18,7 +17,6 @@ public class User {
 
     public User() {}
 
-    // Getters and Setters
     public int getId() {
         return id;
     }
@@ -51,20 +49,8 @@ public class User {
         this.passwordHash = passwordHash;
     }
 
-    public Timestamp getCreatedAt() {
-        return createdAt;
-    }
-
     public void setCreatedAt(Timestamp createdAt) {
         this.createdAt = createdAt;
-    }
-
-    public Timestamp getLastLogin() {
-        return lastLogin;
-    }
-
-    public void setLastLogin(Timestamp lastLogin) {
-        this.lastLogin = lastLogin;
     }
 
     @Override
@@ -74,7 +60,6 @@ public class User {
                 ", username='" + username + '\'' +
                 ", email='" + email + '\'' +
                 ", createdAt=" + createdAt +
-                ", lastLogin=" + lastLogin +
                 '}';
     }
 }

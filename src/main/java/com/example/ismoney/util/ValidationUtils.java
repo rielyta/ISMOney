@@ -18,7 +18,6 @@ public class ValidationUtils {
     }
 
     public static boolean isStrongPassword(String password) {
-        // Simplified password validation - just check if it's not null and has minimum length
         return password != null && password.length() >= 8;
     }
 

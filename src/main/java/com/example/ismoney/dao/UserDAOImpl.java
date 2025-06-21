@@ -1,7 +1,7 @@
 package com.example.ismoney.dao;
 
 import com.example.ismoney.database.DatabaseConfig;
-import com.example.ismoney.model.user.User;
+import com.example.ismoney.model.User;
 import org.mindrot.jbcrypt.BCrypt;
 
 import java.sql.*;

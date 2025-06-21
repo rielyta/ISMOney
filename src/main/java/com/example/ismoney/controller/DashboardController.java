@@ -1,20 +1,24 @@
 package com.example.ismoney.controller;
 
+import com.example.ismoney.util.SceneSwitcher;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.util.Optional;
 
 public class DashboardController {
 
     @FXML private Button transactionButton;
     @FXML private Button savingGoalButton;
+    @FXML private Button logOutBtn;
 
     @FXML
     public void initialize() {
@@ -67,5 +71,12 @@ public class DashboardController {
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
+    }
+
+    @FXML
+    private void handleLogoutButton() {
+        Stage currentStage = (Stage) logOutBtn.getScene().getWindow();
+
+        SceneSwitcher.logout(currentStage, "/com/example/ismoney/Login.fxml");
     }
 }

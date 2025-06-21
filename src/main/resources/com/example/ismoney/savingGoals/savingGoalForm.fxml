@@ -8,86 +8,86 @@
 
 <AnchorPane prefHeight="491.0" prefWidth="756.0" style="-fx-background-color: #63DBF3;" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.ismoney.controller.savingGoalFormController">
 
-    <Label layoutX="258.0" layoutY="25.0" text="Form Saving Goals" textFill="WHITE">
+    <Label layoutX="255.0" layoutY="25.0" text="Form Target Tabungan" textFill="WHITE">
         <font>
             <Font name="System Bold" size="26.0" />
         </font>
     </Label>
     <VBox spacing="15.0" AnchorPane.bottomAnchor="20.0" AnchorPane.leftAnchor="50.0" AnchorPane.rightAnchor="50.0" AnchorPane.topAnchor="80.0">
-            <HBox spacing="85.0">
-                <Label text="Nama Goal" textFill="#333">
-                    <font>
-                        <Font name="System Bold" size="12.0" />
-                    </font>
-                </Label>
-                <TextField fx:id="goalNameField" prefHeight="27.0" prefWidth="362.0" style=" -fx-border-color: #ddd;" />
-            </HBox>
+        <HBox prefWidth="656.0" spacing="85.0">
+            <Label text="Nama Target" textFill="#333">
+                <font>
+                    <Font name="System Bold" size="12.0" />
+                </font>
+            </Label>
+            <TextField fx:id="goalNameField" prefHeight="27.0" prefWidth="366.0" style=" -fx-border-color: #ddd;" />
+        </HBox>
 
-            <HBox spacing="35.0">
-                <Label text="Target Amount (Rp)" textFill="#333">
-                    <font>
-                        <Font name="System Bold" size="12.0" />
-                    </font>
-                </Label>
-                <TextField fx:id="targetAmountField" prefHeight="27.0" prefWidth="174.0" promptText="0" style="-fx-border-color: #ddd;" />
-            </HBox>
-            <HBox spacing="30.0">
-                <Label text="Current Amount (Rp)" textFill="#333">
-                    <font>
-                        <Font name="System Bold" size="12.0" />
-                    </font>
-                </Label>
-                <TextField fx:id="currentAmountField" prefHeight="27.0" prefWidth="173.0" promptText="0" style="-fx-border-color: #ddd;" />
-            </HBox>
-            <HBox spacing="83.0">
-                <Label text="Target Date" textFill="#333">
-                    <font>
-                        <Font name="System Bold" size="12.0" />
-                    </font>
-                </Label>
-                <DatePicker fx:id="targetDatePicker" prefHeight="27.0" prefWidth="135.0" style="-fx-border-color: #ddd;" />
-            </HBox>
-            <HBox spacing="115.0">
-                <Label text="Status" textFill="#333">
-                    <font>
-                        <Font name="System Bold" size="12.0" />
-                    </font>
-                </Label>
-                <ComboBox fx:id="statusComboBox" prefHeight="27.0" prefWidth="175.0" style="-fx-border-color: #ddd;" />
-            </HBox>
-            <HBox alignment="CENTER_RIGHT" spacing="15.0">
-                <Button fx:id="simpanButton" prefHeight="30.0" prefWidth="120.0" style="-fx-background-color: #8c0093; -fx-text-fill: white; -fx-background-radius: 8; -fx-font-weight: bold;" text="Simpan" />
-                <Button fx:id="batalButton" prefHeight="30.0" prefWidth="120.0" style="-fx-background-color: #f5f5f5; -fx-text-fill: #666; -fx-background-radius: 8; -fx-border-color: #ddd; -fx-border-radius: 8;" text="Batal" />
-            </HBox>
+        <HBox spacing="35.0">
+            <Label text="Target Jumlah (Rp)" textFill="#333">
+                <font>
+                    <Font name="System Bold" size="12.0" />
+                </font>
+            </Label>
+            <TextField fx:id="targetAmountField" prefHeight="27.0" prefWidth="174.0" promptText="0" style="-fx-border-color: #ddd;" />
+        </HBox>
+        <HBox spacing="30.0">
+            <Label text="Jumlah Saat Ini (Rp)" textFill="#333">
+                <font>
+                    <Font name="System Bold" size="12.0" />
+                </font>
+            </Label>
+            <TextField fx:id="currentAmountField" prefHeight="27.0" prefWidth="173.0" promptText="0" style="-fx-border-color: #ddd;" />
+        </HBox>
+        <HBox spacing="83.0">
+            <Label text="Target Tanggal" textFill="#333">
+                <font>
+                    <Font name="System Bold" size="12.0" />
+                </font>
+            </Label>
+            <DatePicker fx:id="targetDatePicker" prefHeight="27.0" prefWidth="135.0" style="-fx-border-color: #ddd;" />
+        </HBox>
+        <HBox spacing="115.0">
+            <Label text="Status" textFill="#333">
+                <font>
+                    <Font name="System Bold" size="12.0" />
+                </font>
+            </Label>
+            <ComboBox fx:id="statusComboBox" prefHeight="27.0" prefWidth="175.0" style="-fx-border-color: #ddd;" />
+        </HBox>
+        <HBox alignment="CENTER_RIGHT" spacing="15.0">
+            <Button fx:id="simpanButton" prefHeight="30.0" prefWidth="120.0" style="-fx-background-color: #8c0093; -fx-text-fill: white; -fx-background-radius: 8; -fx-font-weight: bold;" text="Simpan" />
+            <Button fx:id="batalButton" prefHeight="30.0" prefWidth="120.0" style="-fx-background-color: #f5f5f5; -fx-text-fill: #666; -fx-background-radius: 8; -fx-border-color: #ddd; -fx-border-radius: 8;" text="Batal" />
+        </HBox>
 
-            <VBox spacing="8.0" style="-fx-background-color: #f8f9fa; -fx-background-radius: 8; -fx-padding: 15;">
-                <Label text="Progress Preview" textFill="#333">
+        <VBox spacing="8.0" style="-fx-background-color: #f8f9fa; -fx-background-radius: 8; -fx-padding: 15;">
+            <Label text="Pratinjau Progres" textFill="#333">
+                <font>
+                    <Font name="System Bold" size="14.0" />
+                </font>
+            </Label>
+            <ProgressBar fx:id="progressBar" prefHeight="20.0" prefWidth="658.0" progress="0.0" style="-fx-accent: #4CAF50;" />
+
+            <HBox alignment="CENTER_LEFT" spacing="10.0">
+                <Label fx:id="progressLabel" text="0%" textFill="#666">
                     <font>
-                        <Font name="System Bold" size="14.0" />
+                        <Font size="12.0" />
                     </font>
                 </Label>
-                <ProgressBar fx:id="progressBar" prefHeight="20.0" prefWidth="658.0" progress="0.0" style="-fx-accent: #4CAF50;" />
-
-                <HBox alignment="CENTER_LEFT" spacing="10.0">
-                    <Label fx:id="progressLabel" text="0%" textFill="#666">
-                        <font>
-                            <Font size="12.0" />
-                        </font>
-                    </Label>
-                    <Label fx:id="remainingLabel" text="Sisa: Rp 0" textFill="#666">
-                        <font>
-                            <Font size="12.0" />
-                        </font>
-                    </Label>
-                </HBox>
-                <HBox alignment="CENTER_LEFT" prefHeight="25.0" prefWidth="639.0">
-                    <Label fx:id="statusLabel" style="-fx-background-color: #E3F2FD; -fx-background-radius: 12; " text="IN_PROGRESS" textFill="#2196F3">
-                        <font>
-                            <Font name="System Bold" size="10.0" />
-                        </font>
-                    </Label>
-                </HBox>
-            </VBox>
+                <Label fx:id="remainingLabel" text="Sisa: Rp 0" textFill="#666">
+                    <font>
+                        <Font size="12.0" />
+                    </font>
+                </Label>
+            </HBox>
+            <HBox alignment="CENTER_LEFT" prefHeight="25.0" prefWidth="639.0">
+                <Label fx:id="statusLabel" style="-fx-background-color: #E3F2FD; -fx-background-radius: 12; " text="DALAM_PROGRES" textFill="#2196F3">
+                    <font>
+                        <Font name="System Bold" size="10.0" />
+                    </font>
+                </Label>
+            </HBox>
+        </VBox>
 
     </VBox>
 </AnchorPane>

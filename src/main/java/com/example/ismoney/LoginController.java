@@ -2,9 +2,8 @@ package com.example.ismoney;
 
 import com.example.ismoney.dao.UserDAO;
 import com.example.ismoney.dao.UserDAOImpl;
-import com.example.ismoney.model.user.User;
+import com.example.ismoney.model.User;
 import com.example.ismoney.util.SceneSwitcher;
-import com.example.ismoney.util.SessionManager;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
@@ -27,8 +26,6 @@ public class LoginController {
     private Label signupLabel;
     @FXML
     private Button loginButton;
-    @FXML
-    private CheckBox rememberMeCheckBox; // Ini bisa null jika tidak ada di FXML
 
     private final UserDAO userDAO = new UserDAOImpl();
 
@@ -81,13 +78,7 @@ public class LoginController {
 
             userDAO.updateLastLogin(authenticatedUser.getId());
 
-            SessionManager.getInstance().setCurrentUser(authenticatedUser);
-
-            // Check if rememberMeCheckBox exists and is selected
-            boolean rememberMe = rememberMeCheckBox != null && rememberMeCheckBox.isSelected();
-            SessionManager.getInstance().setRememberMe(rememberMe);
-
-            showSuccess("Login berhasil! Mengalihkan ke dashboard...");
+            showSuccess("Login berhasil!");
 
             loginAttempts = 0;
 

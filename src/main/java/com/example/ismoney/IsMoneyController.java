@@ -2,7 +2,7 @@ package com.example.ismoney;
 
 import com.example.ismoney.dao.UserDAO;
 import com.example.ismoney.dao.UserDAOImpl;
-import com.example.ismoney.model.user.User;
+import com.example.ismoney.model.User;
 import com.example.ismoney.util.SceneSwitcher;
 import com.example.ismoney.util.ValidationUtils;
 import javafx.fxml.FXML;
@@ -10,8 +10,8 @@ import javafx.scene.control.*;
 import javafx.stage.Stage;
 import java.util.logging.Logger;
 
-public class HelloController {
-    private static final Logger logger = Logger.getLogger(HelloController.class.getName());
+public class IsMoneyController {
+    private static final Logger logger = Logger.getLogger(IsMoneyController.class.getName());
 
     @FXML private TextField usernameField;
     @FXML private TextField emailField;

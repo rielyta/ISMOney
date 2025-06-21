@@ -1,6 +1,6 @@
 package com.example.ismoney.dao;
 
-import com.example.ismoney.model.user.User;
+import com.example.ismoney.model.User;
 
 public interface UserDAO {
 

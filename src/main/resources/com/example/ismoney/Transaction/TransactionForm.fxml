@@ -11,32 +11,33 @@
             <Font name="System Bold" size="26.0" />
          </font>
       </Label>
-      <Label layoutX="73.0" layoutY="131.0" text="Tipe Transaksi" textFill="WHITE">
+      <Label layoutX="73.0" layoutY="132.0" text="Tipe Transaksi" textFill="WHITE">
          <font>
             <Font size="13.0" />
          </font></Label>
       <TextField fx:id="amountField" layoutX="215.0" layoutY="90.0" />
       <ComboBox fx:id="typeComboBox" layoutX="215.0" layoutY="127.0" prefWidth="150.0" />
-      <Label layoutX="73.0" layoutY="104.0" text="Nominal" textFill="WHITE">
+      <Label layoutX="73.0" layoutY="95.0" text="Nominal" textFill="WHITE">
          <font>
             <Font size="13.0" />
          </font></Label>
       <ComboBox fx:id="categoryComboBox" layoutX="215.0" layoutY="167.0" prefWidth="150.0" />
-      <Label layoutX="73.0" layoutY="171.0" text="Category" textFill="WHITE">
+      <Label layoutX="73.0" layoutY="172.0" text="Kategori" textFill="WHITE">
          <font>
             <Font size="13.0" />
          </font></Label>
       <DatePicker fx:id="datePicker" layoutX="215.0" layoutY="207.0" />
-      <Label layoutX="73.0" layoutY="211.0" text="Tanggal Transaksi" textFill="WHITE">
+      <Label layoutX="73.0" layoutY="212.0" text="Tanggal Transaksi" textFill="WHITE">
          <font>
             <Font size="13.0" />
          </font></Label>
       <TextArea fx:id="noteField" layoutX="210.0" layoutY="249.0" prefHeight="68.0" prefWidth="228.0" />
-      <Label layoutX="72.0" layoutY="255.0" text="Catatan" textFill="WHITE">
+      <Label layoutX="72.0" layoutY="270.0" text="Catatan" textFill="WHITE">
          <font>
             <Font size="13.0" />
          </font></Label>
       <Button layoutX="438.0" layoutY="340.0" mnemonicParsing="false" onAction="#handleSaveTransaction" text="Simpan" />
       <Button fx:id="handleCancel" layoutX="507.0" layoutY="340.0" mnemonicParsing="false" onAction="#handleCancel" text="Batal" />
+      <Button layoutX="45.0" layoutY="340.0" mnemonicParsing="false" onAction="#backToDashboard" style="-fx-background-color: #025d6b;" text="Kembali ke Dasbor" textFill="WHITE" />
    </children>
 </AnchorPane>
