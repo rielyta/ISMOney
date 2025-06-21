@@ -27,7 +27,6 @@ public class TransactionDAO {
         try (Connection conn = dbConfig.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
-            //Set Parameter untuk prepared statement
             stmt.setInt(1, transaction.getUserId());
             stmt.setBigDecimal(2, transaction.getAmount());
             stmt.setString(3, transaction.getType().toString()); // INCOME atau OUTCOME
@@ -35,10 +34,8 @@ public class TransactionDAO {
             stmt.setString(5, transaction.getNote());
             stmt.setDate(6, Date.valueOf(transaction.getTransactionDate()));
 
-            //Eksekusi query insert
             int rowsAffected = stmt.executeUpdate();
 
-            //Insert berhasil lalu ambil auto-generated ID
             if (rowsAffected > 0) {
                 // Ambil ID yang auto-generated
                 ResultSet generatedKeys = stmt.getGeneratedKeys();
@@ -61,7 +58,6 @@ public class TransactionDAO {
     public List<Transaction> getTransactionsByUserId(Integer userId) {
         List<Transaction> transactions = new ArrayList<>();
 
-        // Cek apakah kolom created_at ada di tabel
         String checkColumnSql = "SELECT column_name FROM information_schema.columns WHERE table_name = 'transactions' AND column_name = 'created_at'";
         boolean hasCreatedAt = false;
 
@@ -75,7 +71,6 @@ public class TransactionDAO {
             System.err.println("Error checking column existence: " + e.getMessage());
         }
 
-        // Tentukan query berdasarkan ketersediaan kolom created_at
         String sql;
         if (hasCreatedAt) {
             sql = "SELECT * FROM transactions WHERE user_id = ? ORDER BY transaction_date DESC, created_at DESC";
@@ -89,7 +84,6 @@ public class TransactionDAO {
             stmt.setInt(1, userId);
             ResultSet rs = stmt.executeQuery();
 
-            // Mapping hasil query ke object Transaction
             while (rs.next()) {
                 Transaction transaction = new Transaction();
                 transaction.setTransactionId(rs.getInt("transaction_id"));
@@ -100,7 +94,6 @@ public class TransactionDAO {
                 transaction.setNote(rs.getString("note"));
                 transaction.setTransactionDate(rs.getDate("transaction_date").toLocalDate());
 
-                // Set created_at jika kolom tersebut ada
                 if (hasCreatedAt) {
                     Timestamp createdAt = rs.getTimestamp("created_at");
                     if (createdAt != null) {
@@ -121,13 +114,11 @@ public class TransactionDAO {
 
     //Memperbarui data transaksi yang sudah ada di database
     public boolean updateTransaction(Transaction transaction) {
-        // SQL query untuk update transaksi berdasarkan transaction_id
         String sql = "UPDATE transactions SET amount = ?, type = ?, category_id = ?, note = ?, transaction_date = ? WHERE transaction_id = ?";
 
         try (Connection conn = dbConfig.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            // Set parameter untuk update
             stmt.setBigDecimal(1, transaction.getAmount());
             stmt.setString(2, transaction.getType().toString());
             stmt.setInt(3, transaction.getCategoryId());
@@ -135,7 +126,6 @@ public class TransactionDAO {
             stmt.setDate(5, Date.valueOf(transaction.getTransactionDate()));
             stmt.setInt(6, transaction.getTransactionId());
 
-            // Return true jika ada row yang ter-update
             return stmt.executeUpdate() > 0;
 
         } catch (SQLException e) {
@@ -148,13 +138,11 @@ public class TransactionDAO {
 
     //Menghapus transaksi dari database berdasarkan transaction ID
     public boolean deleteTransaction(Integer transactionId) {
-        // SQL query untuk delete transaksi berdasarkan transaction_id
         String sql = "DELETE FROM transactions WHERE transaction_id = ?";
 
         try (Connection conn = dbConfig.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            // Return true jika ada row yang terhapus
             stmt.setInt(1, transactionId);
             return stmt.executeUpdate() > 0;
 
@@ -166,24 +154,7 @@ public class TransactionDAO {
         return false;
     }
 
-    public BigDecimal getTotalIncome(Integer userId) {
-        String sql = "SELECT COALESCE(SUM(amount), 0) as total FROM transactions WHERE user_id = ? AND type = 'INCOME'";
 
-        try (Connection conn = dbConfig.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setInt(1, userId);
-            ResultSet rs = stmt.executeQuery();
-
-            if (rs.next()) {
-                return rs.getBigDecimal("total");
-            }
-        } catch (SQLException e) {
-            System.err.println("Error getting total income: " + e.getMessage());
-        }
-
-        return BigDecimal.ZERO;
-    }
 
     public BigDecimal getTotalExpense(Integer userId) {
         String sql = "SELECT COALESCE(SUM(amount), 0) as total FROM transactions WHERE user_id = ? AND type = 'OUTCOME'";
@@ -234,6 +205,7 @@ public class TransactionDAO {
         return transactions;
     }
 
+    //mendapatkan tranasksi berdasarkan rentang tanggal
     public List<Transaction> getTransactionsByDateRange(LocalDate startDate, LocalDate endDate) {
         String sql = "SELECT * FROM transactions WHERE transaction_date BETWEEN ? AND ? ORDER BY transaction_date DESC";
         List<Transaction> transactions = new ArrayList<>();
@@ -270,6 +242,7 @@ public class TransactionDAO {
         return transactions;
     }
 
+    //mendapatkan tranasksi berdasarkan id user dan bulan transaksi
     public List<Transaction> getTransactionsByUserIdAndMonth(Integer userId, int year, int month) {
         List<Transaction> transactions = new ArrayList<>();
 
@@ -310,6 +283,7 @@ public class TransactionDAO {
         return transactions;
     }
 
+    //mendapatkan transaksi yg baru
     public List<Transaction> getRecentTransactionsByUserId(Integer userId, int limit) {
         List<Transaction> transactions = new ArrayList<>();
 
@@ -351,44 +325,4 @@ public class TransactionDAO {
         return transactions;
     }
 
-    public List<Transaction> getTransactionsByDateRange(Integer userId, LocalDate startDate, LocalDate endDate) {
-        List<Transaction> transactions = new ArrayList<>();
-
-        String sql = "SELECT transaction_id, user_id, category_id, amount, transaction_date, note, type " +
-                "FROM transactions " +
-                "WHERE user_id = ? AND transaction_date >= ? AND transaction_date <= ? " +
-                "ORDER BY transaction_date DESC";
-
-        try (Connection conn = DatabaseConfig.getInstance().getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setInt(1, userId);
-            stmt.setDate(2, java.sql.Date.valueOf(startDate));
-            stmt.setDate(3, java.sql.Date.valueOf(endDate));
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    Transaction transaction = new Transaction();
-                    transaction.setTransactionId(rs.getInt("transaction_id"));
-                    transaction.setUserId(rs.getInt("user_id"));
-                    transaction.setCategoryId(rs.getInt("category_id"));
-                    transaction.setAmount(rs.getBigDecimal("amount"));
-                    transaction.setTransactionDate(rs.getDate("transaction_date").toLocalDate());
-                    transaction.setNote(rs.getString("note"));
-
-                    // Convert string to TransactionType enum
-                    String typeStr = rs.getString("type");
-                    transaction.setType(TransactionType.valueOf(typeStr.toUpperCase()));
-
-                    transactions.add(transaction);
-                }
-            }
-
-        } catch (SQLException e) {
-            System.err.println("Error getting transactions by date range: " + e.getMessage());
-            e.printStackTrace();
-        }
-
-        return transactions;
-    }
 }
