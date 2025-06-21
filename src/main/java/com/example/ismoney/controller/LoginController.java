@@ -5,8 +5,12 @@ import com.example.ismoney.dao.UserDAOImpl;
 import com.example.ismoney.model.User;
 import com.example.ismoney.util.SceneSwitcher;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.PasswordField;
+import javafx.scene.control.TextField;
 import javafx.stage.Stage;
+
 import java.util.logging.Logger;
 
 public class LoginController {

@@ -11,4 +11,5 @@ public interface UserDAO {
     boolean isUsernameExists(String username);
     User authenticateUser(String emailOrUsername, String password);
     String hashPassword(String plainPassword);
+    boolean updateLastLogin(int userId);
 }

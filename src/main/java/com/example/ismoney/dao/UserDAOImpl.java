@@ -5,8 +5,8 @@ import com.example.ismoney.model.User;
 import org.mindrot.jbcrypt.BCrypt;
 
 import java.sql.*;
-import java.util.logging.Logger;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class UserDAOImpl implements UserDAO {
     private static final Logger logger = Logger.getLogger(UserDAOImpl.class.getName());
@@ -172,6 +172,22 @@ public class UserDAOImpl implements UserDAO {
         }
 
         return BCrypt.hashpw(plainPassword, BCrypt.gensalt(12));
+    }
+
+    @Override
+    public boolean updateLastLogin(int userId) {
+        String sql = "UPDATE users SET last_login = NOW() WHERE id = ?";
+        try (Connection conn = DatabaseConfig.getInstance().getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, userId);
+            int rowsAffected = stmt.executeUpdate();
+            return rowsAffected > 0;
+
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Database error while updating last login", e);
+            return false;
+        }
     }
 
     private User mapResultSetToUser(ResultSet rs) throws SQLException {
