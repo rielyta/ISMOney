@@ -86,25 +86,25 @@ public class TransactionFormController {
 
     private Integer getCurrentLoggedInUserId() {
         try {
-            // First try to get the most recently created user
+            //Baca user yang sedang login
+            String currentUserIdStr = System.getProperty("current.user.id");
+            if (currentUserIdStr != null && !currentUserIdStr.trim().isEmpty()) {
+                Integer currentUserId = Integer.parseInt(currentUserIdStr);
+                System.out.println("Using logged-in user ID from system property: " + currentUserId);
+                return currentUserId;
+            }
+
+            // Fallback ke logic lama jika tidak ada user yang login
             Integer latestUserId = getLatestUserId();
             if (latestUserId != null) {
-                System.out.println("Using latest user ID: " + latestUserId);
+                System.out.println("Using latest user ID (fallback): " + latestUserId);
                 return latestUserId;
             }
 
-            // Fallback to first existing user
             Integer existingUserId = getFirstExistingUserId();
             if (existingUserId != null) {
-                System.out.println("Using first existing user ID: " + existingUserId);
+                System.out.println("Using first existing user ID (fallback): " + existingUserId);
                 return existingUserId;
-            }
-
-            // If no users exist, create a test user
-            User testUser = new User("testuser", "test@example.com", userDAO.hashPassword("password123"));
-            if (userDAO.save(testUser)) {
-                System.out.println("Created test user with ID: " + testUser.getId());
-                return testUser.getId();
             }
 
             System.out.println("No users found, using default ID: 1");

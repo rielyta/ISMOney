@@ -77,7 +77,7 @@ public class LoginController {
             }
 
             userDAO.updateLastLogin(authenticatedUser.getId());
-
+            System.setProperty("current.user.id", String.valueOf(authenticatedUser.getId()));
             showSuccess("Login berhasil!");
 
             loginAttempts = 0;
