@@ -2,6 +2,7 @@ package com.example.ismoney.controller;
 
 import com.example.ismoney.dao.SavingGoalDAO;
 import com.example.ismoney.model.SavingGoal;
+import com.example.ismoney.util.SceneSwitcher;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -33,6 +34,7 @@ public class savingGoalListController implements Initializable {
     @FXML private Button addSavingButton;
     @FXML private Button refreshButton;
     @FXML private Button GoalFormButton;
+    @FXML private Button backButton;
 
     private SavingGoalDAO savingGoalDAO;
 
@@ -188,17 +190,9 @@ public class savingGoalListController implements Initializable {
     @FXML
     private void handleGoalFormButton() {
         try{
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/ismoney/savingGoals/savingGoalForm.fxml"));
-            Parent root = loader.load();
+            SceneSwitcher.switchTo("savingGoals/savingGoalForm.fxml", (Stage) GoalFormButton.getScene().getWindow());
 
-            Stage GoalsStage = new Stage();
-            GoalsStage.setTitle("Tambah Goals");
-            GoalsStage.setScene(new Scene(root));
-            GoalsStage.initModality(Modality.APPLICATION_MODAL);
-
-            GoalsStage.showAndWait();
-
-        } catch (IOException e) {
+        } catch (Exception e) {
             showAlert(Alert.AlertType.ERROR, "Error", "Gagal membuka form saving goals List: " + e.getMessage());
             e.printStackTrace();
         }
@@ -247,5 +241,10 @@ public class savingGoalListController implements Initializable {
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
+    }
+
+    @FXML
+    private void backTo(){
+        SceneSwitcher.switchTo("Dashboard.fxml", (Stage) backButton.getScene().getWindow());
     }
 }

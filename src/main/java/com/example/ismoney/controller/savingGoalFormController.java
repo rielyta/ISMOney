@@ -2,6 +2,7 @@ package com.example.ismoney.controller;
 
 import com.example.ismoney.dao.SavingGoalDAO;
 import com.example.ismoney.model.SavingGoal;
+import com.example.ismoney.util.SceneSwitcher;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -178,6 +179,7 @@ public class savingGoalFormController implements Initializable {
 
     private void handleBatal() {
         clearForm();
+        SceneSwitcher.switchTo("savingGoals/savingGoalList.fxml", (Stage) batalButton.getScene().getWindow());
     }
 
     private void clearForm() {

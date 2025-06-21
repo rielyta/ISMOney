@@ -1,4 +1,4 @@
-package com.example.ismoney;
+package com.example.ismoney.controller;
 
 import com.example.ismoney.dao.UserDAO;
 import com.example.ismoney.dao.UserDAOImpl;

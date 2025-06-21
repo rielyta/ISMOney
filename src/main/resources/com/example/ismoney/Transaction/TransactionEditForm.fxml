@@ -41,8 +41,8 @@
                 </Label>
                 <TextArea fx:id="noteField" layoutX="184.0" layoutY="227.0" prefHeight="68.0" prefWidth="228.0" />
                 <DatePicker fx:id="datePicker" layoutX="184.0" layoutY="177.0" />
-                <ComboBox fx:id="categoryComboBox" layoutX="184.0" layoutY="129.0" prefWidth="150.0" />
-                <ComboBox fx:id="typeComboBox" layoutX="184.0" layoutY="85.0" prefWidth="150.0" />
+                <ComboBox fx:id="categoryComboBox" layoutX="184.0" layoutY="129.0" prefWidth="150.0" style="-fx-cursor: hand;" />
+                <ComboBox fx:id="typeComboBox" layoutX="184.0" layoutY="85.0" prefWidth="150.0" style="-fx-cursor: hand;" />
                 <TextField fx:id="amountField" layoutX="187.0" layoutY="37.0" />
                 <Label layoutX="35.0" layoutY="227.0" text="Catatan">
                     <font>
@@ -51,8 +51,8 @@
                 </Label>
             </children>
         </Pane>
-        <Button layoutX="358.0" layoutY="435.0" mnemonicParsing="false" onAction="#handleSaveTransaction" prefHeight="25.0" prefWidth="133.0" style="-fx-background-color: #8c0093;" text="Perbarui" textFill="WHITE" />
-        <Button layoutX="504.0" layoutY="435.0" mnemonicParsing="false" onAction="#handleCancel" prefHeight="25.0" prefWidth="127.0" text="Batal" />
-      <Button fx:id="backButton" layoutX="41.0" layoutY="53.0" mnemonicParsing="false" onAction="#backTo" prefHeight="26.0" prefWidth="74.0" style="-fx-background-color: #025d6b;" text="Kembali" textFill="WHITE" />
+        <Button layoutX="358.0" layoutY="435.0" mnemonicParsing="false" onAction="#handleSaveTransaction" prefHeight="25.0" prefWidth="133.0" style="-fx-background-color: #8c0093; -fx-cursor: hand;" text="Perbarui" textFill="WHITE" />
+        <Button layoutX="504.0" layoutY="435.0" mnemonicParsing="false" onAction="#handleCancel" prefHeight="25.0" prefWidth="127.0" style="-fx-cursor: hand; -fx-background-color: #ea0000;" text="Batal" textFill="WHITE" />
+<!--      <Button fx:id="backButton" layoutX="41.0" layoutY="53.0" mnemonicParsing="false" onAction="#backTo" prefHeight="26.0" prefWidth="74.0" style="-fx-background-color: #025d6b;" text="Kembali" textFill="WHITE" />-->
     </children>
 </AnchorPane>

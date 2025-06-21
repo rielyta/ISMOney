@@ -7,6 +7,7 @@ import com.example.ismoney.model.Category;
 import com.example.ismoney.model.Transaction;
 import com.example.ismoney.model.TransactionType;
 import com.example.ismoney.model.User;
+import com.example.ismoney.util.SceneSwitcher;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -28,6 +29,7 @@ public class TransactionFormController {
     @FXML private ComboBox<Category> categoryComboBox;
     @FXML private DatePicker datePicker;
     @FXML private TextArea noteField;
+    @FXML private Button handleCancel;
 
     private TransactionDAO transactionDAO;
     private CategoryDAO categoryDAO;
@@ -349,7 +351,8 @@ public class TransactionFormController {
 
     @FXML
     private void handleCancel() {
-        closeForm();
+        clearForm();
+        SceneSwitcher.switchTo("Transaction/TransactionList.fxml", (Stage) handleCancel.getScene().getWindow());
     }
 
     private void closeForm() {

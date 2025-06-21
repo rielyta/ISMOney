@@ -72,7 +72,7 @@
                         <Font size="12.0" />
                      </font>
                   </Label>
-                  <Button fx:id="signupButton" mnemonicParsing="false" onAction="#onSignup" prefHeight="35.0" prefWidth="200.0" style="-fx-background-color: rgba(58, 162, 233, 0.7); -fx-font-family: Poppins; -fx-font-weight: Bold; -fx-font-size: 14px; -fx-background-radius: 7;" text="Daftar" textFill="WHITE">
+                  <Button fx:id="signupButton" mnemonicParsing="false" onAction="#onSignup" prefHeight="35.0" prefWidth="200.0" style="-fx-background-color: rgba(58, 162, 233, 0.7); -fx-font-family: Poppins; -fx-font-weight: Bold; -fx-font-size: 14px; -fx-cursor: hand; -fx-background-radius: 7;" text="Daftar" textFill="WHITE">
                      <font>
                         <Font name="Segoe UI" size="12.0" />
                      </font>

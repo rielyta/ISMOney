@@ -108,11 +108,9 @@ public class TransactionEditFormController {
             return;
         }
 
-        // Validate input
         if (!validateInput()) return;
 
         try {
-            // Update transaction data
             BigDecimal amount = new BigDecimal(amountField.getText().trim());
             String type = typeComboBox.getValue();
             Category category = categoryComboBox.getValue();
@@ -127,7 +125,6 @@ public class TransactionEditFormController {
 
             System.out.println("Attempting to update transaction: " + currentTransaction);
 
-            // Save to database
             boolean success = transactionDAO.updateTransaction(currentTransaction);
 
             if (success) {
@@ -145,7 +142,6 @@ public class TransactionEditFormController {
     }
 
     private boolean validateInput() {
-        // Validate amount
         if (amountField.getText() == null || amountField.getText().trim().isEmpty()) {
             showAlert("Validasi Gagal", "Nominal harus diisi!");
             amountField.requestFocus();
@@ -165,21 +161,18 @@ public class TransactionEditFormController {
             return false;
         }
 
-        // Validate type
         if (typeComboBox.getValue() == null) {
             showAlert("Validasi Gagal", "Tipe transaksi harus dipilih!");
             typeComboBox.requestFocus();
             return false;
         }
 
-        // Validate category
         if (categoryComboBox.getValue() == null) {
             showAlert("Validasi Gagal", "Kategori harus dipilih!");
             categoryComboBox.requestFocus();
             return false;
         }
 
-        // Validate date
         if (datePicker.getValue() == null) {
             showAlert("Validasi Gagal", "Tanggal transaksi harus dipilih!");
             datePicker.requestFocus();
