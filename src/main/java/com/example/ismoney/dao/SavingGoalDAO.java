@@ -17,7 +17,6 @@ public class SavingGoalDAO {
         this.dbConfig = DatabaseConfig.getInstance();
     }
 
-    // Utility method to map ResultSet to SavingGoal
     private SavingGoal mapResultSetToSavingGoal(ResultSet rs) throws SQLException {
         SavingGoal goal = new SavingGoal();
         goal.setGoalId(rs.getInt("goal_id"));
@@ -31,7 +30,6 @@ public class SavingGoalDAO {
         return goal;
     }
 
-    // CREATE - Menambah goal baru dengan user_id
     public boolean addSavingGoal(SavingGoal goal) {
         String sql = "INSERT INTO saving_goals (user_id, goal_name, target_amount, current_amount, target_date, created_date, status) VALUES (?, ?, ?, ?, ?, ?, ?)";
 
@@ -64,7 +62,6 @@ public class SavingGoalDAO {
         return false;
     }
 
-    // READ - Get all saving goals by user ID
     public List<SavingGoal> getSavingGoalsByUserId(Integer userId) throws SQLException {
         String sql = "SELECT goal_id, user_id, goal_name, target_amount, current_amount, target_date, created_date, status FROM saving_goals WHERE user_id = ? ORDER BY created_date DESC";
 
@@ -82,11 +79,9 @@ public class SavingGoalDAO {
                 }
             }
         }
-
         return goals;
     }
 
-    // READ - Get active saving goals by user ID (FIXED - removed duplicate method)
     public List<SavingGoal> getActiveSavingGoalsByUserId(Integer userId) throws SQLException {
         List<SavingGoal> savingGoals = new ArrayList<>();
         String sql = "SELECT goal_id, user_id, goal_name, target_amount, current_amount, target_date, created_date, status FROM saving_goals WHERE user_id = ? AND status = 'ACTIVE' ORDER BY target_date ASC";
@@ -105,13 +100,11 @@ public class SavingGoalDAO {
         } catch (SQLException e) {
             System.err.println("Error getting active saving goals: " + e.getMessage());
             e.printStackTrace();
-            throw e; // Re-throw to maintain SQLException contract
+            throw e;
         }
-
         return savingGoals;
     }
 
-    // READ - Get single saving goal by ID and user ID
     public SavingGoal getSavingGoalById(int goalId, Integer userId) {
         String sql = "SELECT goal_id, user_id, goal_name, target_amount, current_amount, target_date, created_date, status FROM saving_goals WHERE goal_id = ? AND user_id = ?";
 
@@ -134,7 +127,7 @@ public class SavingGoalDAO {
         return null;
     }
 
-    // READ - Method yang dibutuhkan oleh DashboardController (MAIN METHOD FOR DASHBOARD)
+    // buat dashboard
     public List<SavingGoal> getRecentUpdatedGoalsByUserId(Integer userId, int limit) {
         List<SavingGoal> goals = new ArrayList<>();
         String sql = "SELECT goal_id, user_id, goal_name, target_amount, current_amount, target_date, created_date, status " +
@@ -162,7 +155,6 @@ public class SavingGoalDAO {
         return goals;
     }
 
-    // UPDATE - Update saving goal
     public boolean updateSavingGoal(SavingGoal goal) {
         String sql = "UPDATE saving_goals SET goal_name = ?, target_amount = ?, current_amount = ?, target_date = ?, status = ? WHERE goal_id = ? AND user_id = ?";
 
@@ -186,7 +178,6 @@ public class SavingGoalDAO {
         }
     }
 
-    // UPDATE - utk menambah tabungan ke goal
     public boolean addSavingToGoal(int goalId, BigDecimal amount, Integer userId) {
         String sql = "UPDATE saving_goals SET current_amount = current_amount + ? WHERE goal_id = ? AND user_id = ?";
 
@@ -207,7 +198,6 @@ public class SavingGoalDAO {
         return false;
     }
 
-    // UPDATE - Method untuk update status otomatis berdasarkan progres
     public boolean updateGoalStatusBasedOnProgress(int goalId, String status, Integer userId) {
         String sql = "UPDATE saving_goals SET status = ? WHERE goal_id = ? AND user_id = ?";
 
@@ -225,166 +215,6 @@ public class SavingGoalDAO {
             e.printStackTrace();
             return false;
         }
-    }
-
-    // DELETE - Delete saving goal
-    public boolean deleteSavingGoal(int goalId, Integer userId) {
-        String sql = "DELETE FROM saving_goals WHERE goal_id = ? AND user_id = ?";
-
-        try (Connection conn = dbConfig.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setInt(1, goalId);
-            stmt.setInt(2, userId);
-
-            return stmt.executeUpdate() > 0;
-
-        } catch (SQLException e) {
-            System.err.println("Error deleting saving goal: " + e.getMessage());
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    // ANALYTICS - Method untuk mendapatkan total target amount berdasarkan user
-    public BigDecimal getTotalTargetAmountByUserId(Integer userId) {
-        String sql = "SELECT SUM(target_amount) as total FROM saving_goals WHERE user_id = ? AND status = 'ACTIVE'";
-
-        try (Connection conn = dbConfig.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setInt(1, userId);
-            ResultSet rs = stmt.executeQuery();
-
-            if (rs.next()) {
-                BigDecimal total = rs.getBigDecimal("total");
-                return total != null ? total : BigDecimal.ZERO;
-            }
-
-        } catch (SQLException e) {
-            System.err.println("Error getting total target amount: " + e.getMessage());
-            e.printStackTrace();
-        }
-
-        return BigDecimal.ZERO;
-    }
-
-    // ANALYTICS - Method untuk mendapatkan total current amount berdasarkan user
-    public BigDecimal getTotalCurrentAmountByUserId(Integer userId) {
-        String sql = "SELECT SUM(current_amount) as total FROM saving_goals WHERE user_id = ? AND status = 'ACTIVE'";
-
-        try (Connection conn = dbConfig.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setInt(1, userId);
-            ResultSet rs = stmt.executeQuery();
-
-            if (rs.next()) {
-                BigDecimal total = rs.getBigDecimal("total");
-                return total != null ? total : BigDecimal.ZERO;
-            }
-
-        } catch (SQLException e) {
-            System.err.println("Error getting total current amount: " + e.getMessage());
-            e.printStackTrace();
-        }
-
-        return BigDecimal.ZERO;
-    }
-
-    // ANALYTICS - Method untuk mendapatkan jumlah goal aktif berdasarkan user
-    public int getActiveGoalsCountByUserId(Integer userId) {
-        String sql = "SELECT COUNT(*) as count FROM saving_goals WHERE user_id = ? AND status = 'ACTIVE'";
-
-        try (Connection conn = dbConfig.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setInt(1, userId);
-            ResultSet rs = stmt.executeQuery();
-
-            if (rs.next()) {
-                return rs.getInt("count");
-            }
-
-        } catch (SQLException e) {
-            System.err.println("Error getting active goals count: " + e.getMessage());
-            e.printStackTrace();
-        }
-
-        return 0;
-    }
-
-    // ANALYTICS - Method untuk mendapatkan goal yang mendekati deadline
-    public List<SavingGoal> getGoalsNearDeadline(Integer userId, int daysFromNow) {
-        List<SavingGoal> goals = new ArrayList<>();
-        String sql = "SELECT goal_id, user_id, goal_name, target_amount, current_amount, target_date, created_date, status " +
-                "FROM saving_goals WHERE user_id = ? AND status = 'ACTIVE' AND target_date <= DATE_ADD(CURDATE(), INTERVAL ? DAY) " +
-                "ORDER BY target_date ASC";
-
-        try (Connection conn = dbConfig.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setInt(1, userId);
-            stmt.setInt(2, daysFromNow);
-
-            ResultSet rs = stmt.executeQuery();
-            while (rs.next()) {
-                SavingGoal goal = mapResultSetToSavingGoal(rs);
-                goals.add(goal);
-            }
-
-        } catch (SQLException e) {
-            System.err.println("Error getting goals near deadline: " + e.getMessage());
-            e.printStackTrace();
-        }
-
-        return goals;
-    }
-
-    // MAINTENANCE - Method untuk auto-update status goal yang sudah mencapai target
-    public boolean autoUpdateCompletedGoals(Integer userId) {
-        String sql = "UPDATE saving_goals SET status = 'COMPLETED' WHERE user_id = ? AND current_amount >= target_amount AND status = 'ACTIVE'";
-
-        try (Connection conn = dbConfig.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setInt(1, userId);
-            int updatedRows = stmt.executeUpdate();
-
-            if (updatedRows > 0) {
-                System.out.println("Auto-updated " + updatedRows + " completed goals for user " + userId);
-                return true;
-            }
-
-        } catch (SQLException e) {
-            System.err.println("Error auto-updating completed goals: " + e.getMessage());
-            e.printStackTrace();
-        }
-
-        return false;
-    }
-
-    // ANALYTICS - Method untuk mendapatkan statistik goal berdasarkan status
-    public Map<String, Integer> getGoalStatsByUserId(Integer userId) {
-        Map<String, Integer> stats = new HashMap<>();
-        String sql = "SELECT status, COUNT(*) as count FROM saving_goals WHERE user_id = ? GROUP BY status";
-
-        try (Connection conn = dbConfig.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setInt(1, userId);
-            ResultSet rs = stmt.executeQuery();
-
-            while (rs.next()) {
-                stats.put(rs.getString("status"), rs.getInt("count"));
-            }
-
-        } catch (SQLException e) {
-            System.err.println("Error getting goal stats: " + e.getMessage());
-            e.printStackTrace();
-        }
-
-        return stats;
     }
 
     // DEPRECATED METHODS - Maintained for backward compatibility but should not be used
