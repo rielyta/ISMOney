@@ -13,7 +13,7 @@ public class IsMoneyApp extends Application {
         try {
             FXMLLoader fxmlLoader = new FXMLLoader(IsMoneyApp.class.getResource("/com/example/ismoney/Register.fxml"));
 
-            Scene scene = new Scene(fxmlLoader.load(), 756, 491);
+            Scene scene = new Scene(fxmlLoader.load(), 900, 650);
 
             stage.setTitle("IsMoney Application");
             stage.setScene(scene);
