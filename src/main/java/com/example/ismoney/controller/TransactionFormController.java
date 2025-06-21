@@ -45,19 +45,15 @@ public class TransactionFormController {
             categoryDAO = new CategoryDAO();
             userDAO = new UserDAOImpl();
 
-            // Use the same logic as TransactionListController to get current user
             currentUserId = getCurrentLoggedInUserId();
             System.out.println("Using user ID for transaction form: " + currentUserId);
 
-            // Setup basic controls
             typeComboBox.setItems(FXCollections.observableArrayList("Pendapatan", "Pengeluaran"));
             datePicker.setValue(LocalDate.now());
 
-            // Load categories from database first, then add defaults if needed
             loadCategoriesFromDatabase();
             setupCategoryComboBox();
 
-            // Setup event handlers
             typeComboBox.setOnAction(event -> {
                 String selectedType = typeComboBox.getValue();
                 if (selectedType != null) {
@@ -88,7 +84,7 @@ public class TransactionFormController {
 
     private Integer getCurrentLoggedInUserId() {
         try {
-            // First try to get the most recently created user (likely the logged-in one)
+            // First try to get the most recently created user
             Integer latestUserId = getLatestUserId();
             if (latestUserId != null) {
                 System.out.println("Using latest user ID: " + latestUserId);
@@ -212,25 +208,29 @@ public class TransactionFormController {
                     return null;
                 }
 
-                // Try to save to database first
                 Category newCategory = new Category(0, name, type);
                 try {
                     if (categoryDAO.addCategory(newCategory)) {
-                        // Add to local list (remove the "add new" option first)
-                        defaultCategories.remove(defaultCategories.size() - 1);
-                        defaultCategories.add(newCategory);
-                        defaultCategories.add(new Category(-1, "➕ Tambah Kategori Baru...", ""));
-                        return newCategory;
+                        // Reload categories from database to get the correct ID
+                        loadCategoriesFromDatabase();
+                        setupCategoryComboBox();
+
+                        Category addedCategory = defaultCategories.stream()
+                                .filter(c -> c.getName().equals(name) && c.getType().equals(type))
+                                .findFirst()
+                                .orElse(newCategory);
+
+                        System.out.println("Successfully added category: " + addedCategory.getName() + " with ID: " + addedCategory.getCategoriesId());
+                        return addedCategory;
                     } else {
                         showAlert("Kesalahan", "Gagal menyimpan kategori ke database");
                         return null;
                     }
                 } catch (Exception e) {
                     System.err.println("Error saving category: " + e.getMessage());
-                    // Fallback: add to local list only
-                    Category localCategory = new Category(defaultCategories.size() + 100, name, type);
-                    defaultCategories.add(defaultCategories.size() - 1, localCategory);
-                    return localCategory;
+                    e.printStackTrace();
+                    showAlert("Kesalahan", "Error menyimpan kategori: " + e.getMessage());
+                    return null;
                 }
             }
             return null;
@@ -239,6 +239,7 @@ public class TransactionFormController {
         dialog.showAndWait().ifPresent(newCategory -> {
             filterCategoriesByType(type);
             categoryComboBox.setValue(newCategory);
+            System.out.println("Selected new category: " + newCategory.getName());
         });
     }
 
