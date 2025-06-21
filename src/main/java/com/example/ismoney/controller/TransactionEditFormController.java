@@ -12,6 +12,7 @@ import javafx.stage.Stage;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 public class TransactionEditFormController {
@@ -61,15 +62,28 @@ public class TransactionEditFormController {
     private void populateFields() {
         if (currentTransaction != null) {
             amountField.setText(currentTransaction.getAmount().toString());
-            typeComboBox.setValue(currentTransaction.getType() == TransactionType.INCOME ? "Pendapatan" : "Pengeluaran");
+
+            // Set type and trigger filtering
+            String typeValue = currentTransaction.getType() == TransactionType.INCOME ? "Pendapatan" : "Pengeluaran";
+            typeComboBox.setValue(typeValue);
+
+            // Filter categories by type first
+            filterCategoriesByType(typeValue);
+
             datePicker.setValue(currentTransaction.getTransactionDate());
             noteField.setText(currentTransaction.getNote() != null ? currentTransaction.getNote() : "");
 
-            // Set category
+            // Set category after filtering
             try {
                 Category category = categoryDAO.getCategoryById(currentTransaction.getCategoryId());
                 if (category != null) {
-                    categoryComboBox.setValue(category);
+                    // Find the category in the filtered list
+                    for (Category c : categoryComboBox.getItems()) {
+                        if (c.getCategoriesId().equals(category.getCategoriesId())) {
+                            categoryComboBox.setValue(c);
+                            break;
+                        }
+                    }
                 }
             } catch (Exception e) {
                 System.err.println("Error loading category for edit: " + e.getMessage());
@@ -77,10 +91,13 @@ public class TransactionEditFormController {
         }
     }
 
+    private List<Category> allCategories = new ArrayList<>();
+
     private void loadCategories() {
         try {
-            List<Category> categories = categoryDAO.getAllCategories();
-            categoryComboBox.setItems(FXCollections.observableArrayList(categories));
+            allCategories = categoryDAO.getAllCategories();
+            categoryComboBox.setItems(FXCollections.observableArrayList(allCategories));
+            System.out.println("Loaded " + allCategories.size() + " categories for edit form");
         } catch (Exception e) {
             System.err.println("Error loading categories: " + e.getMessage());
         }
@@ -88,16 +105,17 @@ public class TransactionEditFormController {
 
     private void filterCategoriesByType(String selectedType) {
         try {
-            List<Category> allCategories = categoryDAO.getAllCategories();
             List<Category> filtered = allCategories.stream()
                     .filter(c -> c.getType().equals(selectedType))
                     .toList();
             categoryComboBox.setItems(FXCollections.observableArrayList(filtered));
-            categoryComboBox.setValue(null);
+
+            System.out.println("Filtered categories for type '" + selectedType + "': " + filtered.size() + " categories");
         } catch (Exception e) {
             System.err.println("Error filtering categories: " + e.getMessage());
         }
     }
+
 
     @FXML
     private void handleSaveTransaction() {
