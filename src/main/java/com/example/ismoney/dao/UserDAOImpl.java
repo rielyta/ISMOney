@@ -174,22 +174,6 @@ public class UserDAOImpl implements UserDAO {
         return BCrypt.hashpw(plainPassword, BCrypt.gensalt(12));
     }
 
-    @Override
-    public boolean updateLastLogin(int userId) {
-        String sql = "UPDATE users SET last_login = NOW() WHERE id = ?";
-        try (Connection conn = DatabaseConfig.getInstance().getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setInt(1, userId);
-            int rowsAffected = stmt.executeUpdate();
-            return rowsAffected > 0;
-
-        } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Database error while updating last login", e);
-            return false;
-        }
-    }
-
     private User mapResultSetToUser(ResultSet rs) throws SQLException {
         User user = new User();
         user.setId(rs.getInt("id"));

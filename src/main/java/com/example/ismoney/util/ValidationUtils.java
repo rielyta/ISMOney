@@ -20,15 +20,4 @@ public class ValidationUtils {
     public static boolean isStrongPassword(String password) {
         return password != null && password.length() >= 8;
     }
-
-    public static String sanitizeInput(String input) {
-        if (input == null) return null;
-        return input.trim()
-                .replaceAll("[<>\"'%;()&+]", "")
-                .replaceAll("\\s+", " ");
-    }
-
-    public static boolean isSafeString(String input) {
-        return input != null && input.matches("^[a-zA-Z0-9@._\\s-]+$");
-    }
 }

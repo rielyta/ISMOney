@@ -19,7 +19,6 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
 import javafx.util.Duration;
-
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -35,6 +34,7 @@ public class DashboardController {
 
     @FXML private Button transactionButton;
     @FXML private Button GoalsListButton;
+    @FXML private Button budgetButton;
     @FXML private Button logOutBtn;
 
     // FXML fields untuk ringkasan keuangan
@@ -58,9 +58,8 @@ public class DashboardController {
 
     // Auto refresh components
     private Timeline autoRefreshTimeline;
-    private static final int REFRESH_INTERVAL_SECONDS = 30; // Refresh setiap 30 detik
+    private static final int REFRESH_INTERVAL_SECONDS = 30;
     private LocalDateTime lastRefreshTime;
-    private Label lastUpdateLabel;
 
     @FXML
     public void initialize() {
@@ -140,7 +139,6 @@ public class DashboardController {
         descriptionColumn.setCellValueFactory(new PropertyValueFactory<>("description"));
         amountColumn.setCellValueFactory(new PropertyValueFactory<>("amount"));
 
-        // Custom cell factory untuk kolom type dengan warna
         typeColumn.setCellFactory(column -> new TableCell<ActivityLog, String>() {
             @Override
             protected void updateItem(String type, boolean empty) {
@@ -168,7 +166,6 @@ public class DashboardController {
             }
         });
 
-        // Custom cell factory untuk kolom amount dengan format currency
         amountColumn.setCellFactory(column -> new TableCell<ActivityLog, String>() {
             @Override
             protected void updateItem(String amount, boolean empty) {
@@ -208,7 +205,6 @@ public class DashboardController {
                     ", Year: " + selectedDate.getYear() +
                     ", Month: " + selectedDate.getMonthValue());
 
-            // Get transactions for selected month
             List<Transaction> monthlyTransactions = transactionDAO.getTransactionsByUserIdAndMonth(
                     currentUserId, selectedDate.getYear(), selectedDate.getMonthValue());
 
@@ -227,12 +223,10 @@ public class DashboardController {
 
             BigDecimal totalBalance = totalIncome.subtract(totalExpense);
 
-            // Update UI fields
             totalIncomeField.setText("Rp " + String.format("%,.0f", totalIncome.doubleValue()));
             totalExpenseField.setText("Rp " + String.format("%,.0f", totalExpense.doubleValue()));
             totalBalanceField.setText("Rp " + String.format("%,.0f", totalBalance.doubleValue()));
 
-            // Set text color for balance
             if (totalBalance.compareTo(BigDecimal.ZERO) >= 0) {
                 totalBalanceField.setStyle("-fx-text-fill: green; -fx-font-weight: bold; -fx-border-color: #3498db; -fx-border-radius: 5; -fx-background-color: #f8f9fa;");
             } else {
@@ -243,7 +237,6 @@ public class DashboardController {
             System.err.println("Error loading financial summary: " + e.getMessage());
             e.printStackTrace();
 
-            // Set default values jika ada error
             totalIncomeField.setText("Rp 0");
             totalExpenseField.setText("Rp 0");
             totalBalanceField.setText("Rp 0");
@@ -260,7 +253,6 @@ public class DashboardController {
                 selectedDate = LocalDate.now();
             }
 
-            // Load recent transactions (last 10 transactions)
             List<Transaction> recentTransactions = transactionDAO.getRecentTransactionsByUserId(currentUserId, 10);
             for (Transaction transaction : recentTransactions) {
                 String categoryName = categoryCache.getOrDefault(transaction.getCategoryId(), "Unknown");
@@ -279,7 +271,6 @@ public class DashboardController {
                 activityLogs.add(log);
             }
 
-            // Load recent saving goals activities
             try {
                 List<SavingGoal> recentGoals = savingGoalDAO.getRecentUpdatedGoalsByUserId(currentUserId, 5);
                 for (SavingGoal goal : recentGoals) {
@@ -298,19 +289,17 @@ public class DashboardController {
                 System.err.println("Error loading saving goals for activity log: " + e.getMessage());
             }
 
-            // Sort by date (newest first)
             activityLogs.sort((a, b) -> {
                 try {
                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
                     LocalDate dateA = LocalDate.parse(a.getDate(), formatter);
                     LocalDate dateB = LocalDate.parse(b.getDate(), formatter);
-                    return dateB.compareTo(dateA); // newest first
+                    return dateB.compareTo(dateA);
                 } catch (Exception e) {
-                    return b.getDate().compareTo(a.getDate()); // fallback to string comparison
+                    return b.getDate().compareTo(a.getDate());
                 }
             });
 
-            // Update table di UI thread
             Platform.runLater(() -> {
                 activityLogTable.setItems(activityLogs);
             });
@@ -330,43 +319,6 @@ public class DashboardController {
         } catch (Exception e) {
             System.err.println("Error loading categories cache: " + e.getMessage());
         }
-    }
-
-    // Method untuk manual refresh (bisa dipanggil dari button atau keyboard shortcut)
-    @FXML
-    private void handleManualRefresh() {
-        System.out.println("Manual refresh triggered");
-        refreshDashboard();
-    }
-
-    // Method untuk toggle auto refresh
-    public void toggleAutoRefresh() {
-        if (autoRefreshTimeline != null) {
-            if (autoRefreshTimeline.getStatus() == Animation.Status.RUNNING) {
-                autoRefreshTimeline.stop();
-                System.out.println("Auto refresh stopped");
-            } else {
-                autoRefreshTimeline.play();
-                System.out.println("Auto refresh started");
-            }
-        }
-    }
-
-    // Method untuk mengubah interval refresh
-    public void setRefreshInterval(int seconds) {
-        if (autoRefreshTimeline != null) {
-            autoRefreshTimeline.stop();
-        }
-
-        autoRefreshTimeline = new Timeline(
-                new KeyFrame(Duration.seconds(seconds), e -> {
-                    Platform.runLater(this::refreshDashboard);
-                })
-        );
-        autoRefreshTimeline.setCycleCount(Animation.INDEFINITE);
-        autoRefreshTimeline.play();
-
-        System.out.println("Refresh interval changed to " + seconds + " seconds");
     }
 
     private Integer getCurrentLoggedInUserId() {
@@ -435,6 +387,17 @@ public class DashboardController {
     }
 
     @FXML
+    private void handleBudgetButton() {
+        try {
+            SceneSwitcher.switchTo("Budget/Budget.fxml", (Stage) budgetButton.getScene().getWindow());
+
+        } catch (Exception e) {
+            showAlert("Kesalahan", "Terjadi kesalahan tidak terduga: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    @FXML
     private void handleLogoutButton() {
         // Stop auto refresh before logout
         if (autoRefreshTimeline != null) {
@@ -443,14 +406,6 @@ public class DashboardController {
 
         Stage currentStage = (Stage) logOutBtn.getScene().getWindow();
         SceneSwitcher.logout(currentStage, "/com/example/ismoney/Login.fxml");
-    }
-
-    // Cleanup method - panggil saat scene akan ditutup
-    public void cleanup() {
-        if (autoRefreshTimeline != null) {
-            autoRefreshTimeline.stop();
-            System.out.println("Auto refresh stopped - cleanup");
-        }
     }
 
     private void showAlert(String title, String message) {
@@ -463,7 +418,6 @@ public class DashboardController {
         });
     }
 
-    // Inner class untuk Activity Log
     public static class ActivityLog {
         private final SimpleStringProperty date;
         private final SimpleStringProperty type;
@@ -482,7 +436,6 @@ public class DashboardController {
 
         public String getType() { return type.get(); }
         public void setType(String type) { this.type.set(type); }
-
 
         public String getAmount() { return amount.get(); }
         public void setAmount(String amount) { this.amount.set(amount); }

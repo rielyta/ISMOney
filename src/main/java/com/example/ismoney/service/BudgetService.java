@@ -1,11 +1,10 @@
-// BudgetService.java
 package com.example.ismoney.service;
 
 import com.example.ismoney.dao.BudgetDAO;
 import com.example.ismoney.model.Budget;
+
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.time.YearMonth;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -16,114 +15,102 @@ public class BudgetService {
         this.budgetDAO = new BudgetDAO();
     }
 
-    public void createBudget(Budget budget) throws SQLException {
+    // Save new budget
+    public void saveBudget(Budget budget) throws SQLException {
+        // Validate budget before saving
         validateBudget(budget);
+
+        // Check for overlapping budgets in same category
+        Budget existingBudget = budgetDAO.getBudgetByCategory(budget.getCategory(), LocalDate.now());
+        if (existingBudget != null && existingBudget.isActive()) {
+            throw new SQLException("Budget aktif untuk kategori '" + budget.getCategory() + "' sudah ada.");
+        }
+
         budgetDAO.saveBudget(budget);
     }
 
-    public List<Budget> getAllBudgets() throws SQLException {
-        return budgetDAO.getAllBudgets();
-    }
-
-    public List<Budget> getActiveBudgets() throws SQLException {
-        return budgetDAO.getActiveBudgets();
-    }
-
-    public List<Budget> getCurrentBudgets() throws SQLException {
-        return budgetDAO.getCurrentBudgets();
-    }
-
-    public Budget getBudgetById(int id) throws SQLException {
-        return budgetDAO.getBudgetById(id);
-    }
-
-    public Budget getBudgetByCategory(String category, LocalDate date) throws SQLException {
-        return budgetDAO.getBudgetByCategory(category, date);
-    }
-
+    // Update existing budget
     public void updateBudget(Budget budget) throws SQLException {
         validateBudget(budget);
         budgetDAO.updateBudget(budget);
     }
 
+    // Get all budgets
+    public List<Budget> getAllBudgets() throws SQLException {
+        return budgetDAO.getAllBudgets();
+    }
+
+    // Get active budgets only
+    public List<Budget> getActiveBudgets() throws SQLException {
+        return budgetDAO.getActiveBudgets();
+    }
+
+    // Get current budgets (active and within date range)
+    public List<Budget> getCurrentBudgets() throws SQLException {
+        return budgetDAO.getCurrentBudgets();
+    }
+
+    // Get budget by ID
+    public Budget getBudgetById(int id) throws SQLException {
+        return budgetDAO.getBudgetById(id);
+    }
+
+    // Get budget by category for specific date
+    public Budget getBudgetByCategory(String category, LocalDate date) throws SQLException {
+        return budgetDAO.getBudgetByCategory(category, date);
+    }
+
+    // Delete budget
     public void deleteBudget(int id) throws SQLException {
+        Budget budget = budgetDAO.getBudgetById(id);
+        if (budget == null) {
+            throw new SQLException("Budget tidak ditemukan.");
+        }
         budgetDAO.deleteBudget(id);
     }
 
+    // Deactivate budget instead of deleting
     public void deactivateBudget(int id) throws SQLException {
         budgetDAO.deactivateBudget(id);
     }
 
-    // Update spent amount for a budget when a transaction is made
-    public void updateBudgetSpent(String category, double amount, LocalDate transactionDate) throws SQLException {
-        Budget budget = budgetDAO.getBudgetByCategory(category, transactionDate);
-        if (budget != null) {
-            budgetDAO.addToBudgetSpent(budget.getId(), amount);
-        }
+    // Update spent amount for a budget
+    public void updateBudgetSpent(int budgetId, double spentAmount) throws SQLException {
+        budgetDAO.updateBudgetSpent(budgetId, spentAmount);
     }
 
-    // Refresh all budget spent amounts based on actual transactions
-    public void refreshBudgetSpentAmounts() throws SQLException {
-        List<Budget> activeBudgets = getActiveBudgets();
+    // Add to spent amount (for when new transaction is added)
+    public void addToBudgetSpent(int budgetId, double amount) throws SQLException {
+        budgetDAO.addToBudgetSpent(budgetId, amount);
+    }
 
-        for (Budget budget : activeBudgets) {
+    // Refresh budget spent amounts based on actual transactions
+    public void refreshBudgetSpentAmounts() throws SQLException {
+        List<Budget> currentBudgets = getCurrentBudgets();
+
+        for (Budget budget : currentBudgets) {
             double actualSpent = budgetDAO.getTotalSpentByCategory(
                     budget.getCategory(),
                     budget.getStartDate(),
                     budget.getEndDate()
             );
-            budgetDAO.updateBudgetSpent(budget.getId(), actualSpent);
+
+            if (actualSpent != budget.getSpentAmount()) {
+                budgetDAO.updateBudgetSpent(budget.getId(), actualSpent);
+            }
         }
     }
 
-    // Get budgets that are over limit
-    public List<Budget> getOverBudgetBudgets() throws SQLException {
-        List<Budget> currentBudgets = getCurrentBudgets();
-        return currentBudgets.stream()
-                .filter(Budget::isOverBudget)
-                .collect(Collectors.toList());
-    }
-
-    // Get budgets that are near limit (above specified threshold)
-    public List<Budget> getBudgetsNearLimit(double threshold) throws SQLException {
-        List<Budget> currentBudgets = getCurrentBudgets();
-        return currentBudgets.stream()
-                .filter(budget -> budget.isNearLimit(threshold) && !budget.isOverBudget())
-                .collect(Collectors.toList());
-    }
-
-    // Create monthly budget for a category
-    public void createMonthlyBudget(String category, double limitAmount, YearMonth yearMonth) throws SQLException {
-        LocalDate startDate = yearMonth.atDay(1);
-        LocalDate endDate = yearMonth.atEndOfMonth();
-
-        Budget budget = new Budget(category, limitAmount, startDate, endDate, "monthly");
-        createBudget(budget);
-    }
-
-    // Create yearly budget for a category
-    public void createYearlyBudget(String category, double limitAmount, int year) throws SQLException {
-        LocalDate startDate = LocalDate.of(year, 1, 1);
-        LocalDate endDate = LocalDate.of(year, 12, 31);
-
-        Budget budget = new Budget(category, limitAmount, startDate, endDate, "yearly");
-        createBudget(budget);
-    }
-
-    // Get budget summary
+    // Get budget summary for dashboard
     public BudgetSummary getBudgetSummary() throws SQLException {
         List<Budget> currentBudgets = getCurrentBudgets();
 
-        double totalBudgetAmount = currentBudgets.stream()
+        double totalLimit = currentBudgets.stream()
                 .mapToDouble(Budget::getLimitAmount)
                 .sum();
 
-        double totalSpentAmount = currentBudgets.stream()
+        double totalSpent = currentBudgets.stream()
                 .mapToDouble(Budget::getSpentAmount)
-                .sum();
-
-        double totalRemainingAmount = currentBudgets.stream()
-                .mapToDouble(Budget::getRemainingAmount)
                 .sum();
 
         long overBudgetCount = currentBudgets.stream()
@@ -131,98 +118,91 @@ public class BudgetService {
                 .count();
 
         long nearLimitCount = currentBudgets.stream()
-                .filter(budget -> budget.isNearLimit(80) && !budget.isOverBudget())
+                .filter(b -> !b.isOverBudget() && b.isNearLimit(80))
                 .count();
 
         return new BudgetSummary(
-                totalBudgetAmount,
-                totalSpentAmount,
-                totalRemainingAmount,
+                totalLimit,
+                totalSpent,
                 (int) overBudgetCount,
-                (int) nearLimitCount
+                (int) nearLimitCount,
+                currentBudgets.size()
         );
     }
 
-    // Calculate spending velocity (how fast money is being spent)
-    public double calculateSpendingVelocity(Budget budget) {
-        LocalDate today = LocalDate.now();
-        LocalDate startDate = budget.getStartDate();
-
-        if (today.isBefore(startDate)) {
-            return 0; // Budget hasn't started yet
-        }
-
-        long daysPassed = startDate.until(today).getDays() + 1; // +1 to include today
-        if (daysPassed <= 0) return 0;
-
-        return budget.getSpentAmount() / daysPassed;
+    // Get budgets that are over limit
+    public List<Budget> getOverBudgetAlerts() throws SQLException {
+        return getCurrentBudgets().stream()
+                .filter(Budget::isOverBudget)
+                .collect(Collectors.toList());
     }
 
-    // Predict when budget will be exhausted based on current spending velocity
-    public LocalDate predictBudgetExhaustionDate(Budget budget) {
-        double velocity = calculateSpendingVelocity(budget);
-        if (velocity <= 0) return null;
-
-        double remainingAmount = budget.getRemainingAmount();
-        if (remainingAmount <= 0) return LocalDate.now(); // Already exhausted
-
-        long daysToExhaustion = (long) Math.ceil(remainingAmount / velocity);
-        return LocalDate.now().plusDays(daysToExhaustion);
+    // Get budgets near limit (80% or more)
+    public List<Budget> getNearLimitAlerts() throws SQLException {
+        return getCurrentBudgets().stream()
+                .filter(b -> !b.isOverBudget() && b.isNearLimit(80))
+                .collect(Collectors.toList());
     }
 
-    private void validateBudget(Budget budget) {
+    // Get budgets by period
+    public List<Budget> getBudgetsByPeriod(String period) throws SQLException {
+        return getAllBudgets().stream()
+                .filter(b -> b.getPeriod().equalsIgnoreCase(period))
+                .collect(Collectors.toList());
+    }
+
+    // Validate budget data
+    private void validateBudget(Budget budget) throws SQLException {
         if (budget.getCategory() == null || budget.getCategory().trim().isEmpty()) {
-            throw new IllegalArgumentException("Budget category cannot be empty");
+            throw new SQLException("Kategori budget tidak boleh kosong.");
         }
 
         if (budget.getLimitAmount() <= 0) {
-            throw new IllegalArgumentException("Budget limit amount must be positive");
+            throw new SQLException("Batas anggaran harus lebih dari 0.");
         }
 
-        if (budget.getSpentAmount() < 0) {
-            throw new IllegalArgumentException("Budget spent amount cannot be negative");
+        if (budget.getStartDate() == null) {
+            throw new SQLException("Tanggal mulai tidak boleh kosong.");
         }
 
-        if (budget.getStartDate() == null || budget.getEndDate() == null) {
-            throw new IllegalArgumentException("Budget start date and end date cannot be null");
+        if (budget.getEndDate() == null) {
+            throw new SQLException("Tanggal berakhir tidak boleh kosong.");
         }
 
-        if (budget.getStartDate().isAfter(budget.getEndDate())) {
-            throw new IllegalArgumentException("Budget start date cannot be after end date");
+        if (budget.getEndDate().isBefore(budget.getStartDate())) {
+            throw new SQLException("Tanggal berakhir tidak boleh lebih awal dari tanggal mulai.");
         }
 
         if (budget.getPeriod() == null || budget.getPeriod().trim().isEmpty()) {
-            throw new IllegalArgumentException("Budget period cannot be empty");
+            throw new SQLException("Periode budget tidak boleh kosong.");
+        }
+
+        // Validate period values
+        String period = budget.getPeriod().toLowerCase();
+        if (!period.equals("monthly") && !period.equals("weekly") && !period.equals("yearly")) {
+            throw new SQLException("Periode budget harus 'monthly', 'weekly', atau 'yearly'.");
         }
     }
 
     // Inner class for budget summary
     public static class BudgetSummary {
-        private final double totalBudgetAmount;
-        private final double totalSpentAmount;
-        private final double totalRemainingAmount;
-        private final int overBudgetCount;
-        private final int nearLimitCount;
+        public final double totalLimit;
+        public final double totalSpent;
+        public final double remainingAmount;
+        public final double usagePercentage;
+        public final int overBudgetCount;
+        public final int nearLimitCount;
+        public final int totalBudgetsCount;
 
-        public BudgetSummary(double totalBudgetAmount, double totalSpentAmount,
-                             double totalRemainingAmount, int overBudgetCount, int nearLimitCount) {
-            this.totalBudgetAmount = totalBudgetAmount;
-            this.totalSpentAmount = totalSpentAmount;
-            this.totalRemainingAmount = totalRemainingAmount;
+        public BudgetSummary(double totalLimit, double totalSpent, int overBudgetCount,
+                             int nearLimitCount, int totalBudgetsCount) {
+            this.totalLimit = totalLimit;
+            this.totalSpent = totalSpent;
+            this.remainingAmount = totalLimit - totalSpent;
+            this.usagePercentage = totalLimit > 0 ? (totalSpent / totalLimit) * 100 : 0;
             this.overBudgetCount = overBudgetCount;
             this.nearLimitCount = nearLimitCount;
-        }
-
-        // Getters
-        public double getTotalBudgetAmount() { return totalBudgetAmount; }
-        public double getTotalSpentAmount() { return totalSpentAmount; }
-        public double getTotalRemainingAmount() { return totalRemainingAmount; }
-        public int getOverBudgetCount() { return overBudgetCount; }
-        public int getNearLimitCount() { return nearLimitCount; }
-
-        public double getOverallUsagePercentage() {
-            if (totalBudgetAmount == 0) return 0;
-            return (totalSpentAmount / totalBudgetAmount) * 100;
+            this.totalBudgetsCount = totalBudgetsCount;
         }
     }
 }
