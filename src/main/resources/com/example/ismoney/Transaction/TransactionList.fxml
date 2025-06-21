@@ -24,7 +24,7 @@
             </columns>
         </TableView>
 
-        <Button fx:id="addTransactionButton" layoutX="560.0" layoutY="382.0" mnemonicParsing="false" onAction="#handleAddTransaction" prefHeight="25.0" prefWidth="139.0" style="-fx-background-color: #8c0093;" text="Tambah Transaksi" textFill="#fff3f3" />
+        <Button fx:id="addTransactionButton" layoutX="560.0" layoutY="382.0" mnemonicParsing="false" onAction="#handleAddTransaction" prefHeight="25.0" prefWidth="139.0" style="-fx-background-color: #8c0093; -fx-cursor: hand;" text="Tambah Transaksi" textFill="#fff3f3" />
 
         <LineChart fx:id="lineChart" animated="true" createSymbols="true" layoutX="40.0" layoutY="76.0" legendVisible="true" prefHeight="177.0" prefWidth="704.0" style="-fx-background-color: white; -fx-border-color: #E0E0E0; -fx-border-width: 1;">
             <xAxis>
@@ -42,10 +42,10 @@
         </Label>
 
         <TextField fx:id="searchField" layoutX="637.0" layoutY="273.0" onAction="#handleFilter" prefHeight="25.0" prefWidth="112.0" promptText="Cari kategori/catatan..." />
-        <Button fx:id="searchButton" layoutX="560.0" layoutY="273.0" mnemonicParsing="false" onAction="#handleFilter" prefHeight="25.0" prefWidth="69.0" text="Cari" />
-        <ComboBox fx:id="filterComboBox" layoutX="560.0" layoutY="308.0" onAction="#handleFilter" prefHeight="25.0" prefWidth="129.0" promptText="Filter" />
-        <Button fx:id="editButton" layoutX="560.0" layoutY="343.0" mnemonicParsing="false" onAction="#handleEdit" prefHeight="25.0" prefWidth="60.0" style="-fx-background-color: #2196F3;" text="Edit" textFill="WHITE" />
-        <Button fx:id="deleteButton" layoutX="632.0" layoutY="343.0" mnemonicParsing="false" onAction="#handleDelete" prefHeight="25.0" prefWidth="60.0" text="Hapus" />
-      <Button fx:id="backButton" layoutX="40.0" layoutY="40.0" mnemonicParsing="false" onAction="#backTo" prefHeight="26.0" prefWidth="74.0" style="-fx-background-color: #025d6b;" text="Kembali" textFill="WHITE" />
+        <Button fx:id="searchButton" layoutX="560.0" layoutY="273.0" mnemonicParsing="false" onAction="#handleFilter" prefHeight="25.0" prefWidth="69.0" style="-fx-cursor: hand;" text="Cari" />
+        <ComboBox fx:id="filterComboBox" layoutX="560.0" layoutY="308.0" onAction="#handleFilter" prefHeight="25.0" prefWidth="129.0" promptText="Filter" style="-fx-cursor: hand;" />
+        <Button fx:id="editButton" layoutX="560.0" layoutY="343.0" mnemonicParsing="false" onAction="#handleEdit" prefHeight="25.0" prefWidth="60.0" style="-fx-background-color: #2196F3; -fx-cursor: hand;" text="Edit" textFill="WHITE" />
+        <Button fx:id="deleteButton" layoutX="632.0" layoutY="343.0" mnemonicParsing="false" onAction="#handleDelete" prefHeight="25.0" prefWidth="60.0" style="-fx-cursor: hand; -fx-background-color: #ea0000;" text="Hapus" textFill="WHITE" />
+        <Button fx:id="backButton" layoutX="40.0" layoutY="40.0" mnemonicParsing="false" onAction="#backTo" prefHeight="26.0" prefWidth="74.0" style="-fx-background-color: #007bac; -fx-cursor: hand;" text="Kembali" textFill="WHITE" />
     </children>
 </AnchorPane>

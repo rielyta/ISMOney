@@ -5,21 +5,16 @@ import com.example.ismoney.dao.TransactionDAO;
 import com.example.ismoney.model.Category;
 import com.example.ismoney.model.Transaction;
 import com.example.ismoney.model.TransactionType;
+import com.example.ismoney.util.SceneSwitcher;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.stage.Modality;
 import javafx.stage.Stage;
-
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -45,6 +40,7 @@ public class TransactionListController {
     @FXML private Button editButton;
     @FXML private Button deleteButton;
     @FXML private LineChart<String, Number> lineChart;
+    @FXML private Button backButton;
 
     private TransactionDAO transactionDAO;
     private CategoryDAO categoryDAO;
@@ -60,7 +56,6 @@ public class TransactionListController {
             transactionDAO = new TransactionDAO();
             categoryDAO = new CategoryDAO();
 
-            // Get the current logged-in user ID (more dynamic approach)
             currentUserId = getCurrentLoggedInUserId();
             System.out.println("Using user ID for transaction list: " + currentUserId);
 
@@ -68,7 +63,7 @@ public class TransactionListController {
             setupFilterControls();
             setupTableSelectionListener();
             setupChart();
-            loadCategoriesCache(); // Load categories once
+            loadCategoriesCache();
             loadTransactions();
             updateChart();
 
@@ -147,19 +142,16 @@ public class TransactionListController {
     }
 
     private void setupChart() {
-        // Configure chart appearance
         lineChart.setTitle("Belum Ada Data Transaksi");
         lineChart.setLegendVisible(true);
         lineChart.setCreateSymbols(true);
         lineChart.setAnimated(true);
 
-        // Style the chart
         lineChart.getXAxis().setLabel("");
         lineChart.getYAxis().setLabel("");
         lineChart.getXAxis().setTickLabelsVisible(true);
         lineChart.getYAxis().setTickLabelsVisible(true);
 
-        // Remove grid lines for cleaner look
         lineChart.setHorizontalGridLinesVisible(false);
         lineChart.setVerticalGridLinesVisible(false);
         lineChart.setHorizontalZeroLineVisible(false);
@@ -315,11 +307,9 @@ public class TransactionListController {
                 return;
             }
 
-            // Get date range for the last 12 months or use actual data range
             LocalDate endDate = LocalDate.now();
             LocalDate startDate = endDate.minusMonths(11).withDayOfMonth(1);
 
-            // Create month labels
             List<String> monthLabels = new ArrayList<>();
             LocalDate current = startDate;
             while (!current.isAfter(endDate)) {
@@ -327,7 +317,6 @@ public class TransactionListController {
                 current = current.plusMonths(1);
             }
 
-            // Group transactions by month
             Map<String, BigDecimal> monthlyIncome = allTransactions.stream()
                     .filter(t -> t.getType() == TransactionType.INCOME)
                     .filter(t -> !t.getTransactionDate().isBefore(startDate) && !t.getTransactionDate().isAfter(endDate))
@@ -399,7 +388,6 @@ public class TransactionListController {
 
         List<Transaction> filteredTransactions = allTransactions.stream()
                 .filter(transaction -> {
-                    // Filter berdasarkan tipe
                     if (!filterValue.equals("Semua")) {
                         TransactionType filterType = filterValue.equals("Pemasukan") ?
                                 TransactionType.INCOME : TransactionType.OUTCOME;
@@ -408,7 +396,6 @@ public class TransactionListController {
                         }
                     }
 
-                    // Filter berdasarkan pencarian
                     if (!searchText.isEmpty()) {
                         String categoryName = getCategoryNameFromCache(transaction.getCategoryId()).toLowerCase();
                         String note = transaction.getNote() != null ? transaction.getNote().toLowerCase() : "";
@@ -429,22 +416,12 @@ public class TransactionListController {
     @FXML
     private void handleAddTransaction() {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/ismoney/Transaction/TransactionForm.fxml"));
-            Parent root = loader.load();
-
-            Stage transactionStage = new Stage();
-            transactionStage.setTitle("Tambah Transaksi");
-            transactionStage.setScene(new Scene(root));
-            transactionStage.initModality(Modality.APPLICATION_MODAL);
-
-            transactionStage.showAndWait();
-
-
+            SceneSwitcher.switchTo("Transaction/TransactionForm.fxml", (Stage) addTransactionButton.getScene().getWindow());
             loadCategoriesCache();
             loadTransactions();
             updateChart();
 
-        } catch (IOException e) {
+        } catch (Exception e) {
             System.err.println("Error opening transaction form: " + e.getMessage());
             e.printStackTrace();
             showAlert("Kesalahan", "Gagal membuka form transaksi: " + e.getMessage());
@@ -456,26 +433,19 @@ public class TransactionListController {
         Transaction selectedTransaction = transactionTable.getSelectionModel().getSelectedItem();
         if (selectedTransaction != null) {
             try {
-                FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/ismoney/Transaction/TransactionEditForm.fxml"));
-                Parent root = loader.load();
+                SceneSwitcher.switchTo("Transaction/TransactionEditForm.fxml", (Stage) editButton.getScene().getWindow());
 
-                // Get controller and pass selected transaction
-                TransactionEditFormController controller = loader.getController();
-                controller.setTransaction(selectedTransaction);
+                // Refresh semua data setelah edit
+                loadCategoriesCache(); // Refresh categories cache
+                loadTransactions();    // Refresh transactions
+                updateChart();         // Update chart
 
-                Stage editStage = new Stage();
-                editStage.setTitle("Edit Transaksi");
-                editStage.setScene(new Scene(root));
-                editStage.initModality(Modality.APPLICATION_MODAL);
+                System.out.println("Data refreshed after edit");
 
-                editStage.showAndWait();
-
-                loadTransactions();
-                updateChart();
-
-            } catch (IOException e) {
+            } catch (Exception e) {
                 System.err.println("Error opening edit form: " + e.getMessage());
-                showAlert("Info", "Fitur edit dalam pengembangan. Silakan hapus dan buat ulang transaksi.");
+                e.printStackTrace();
+                showAlert("Kesalahan", "Gagal membuka form edit: " + e.getMessage());
             }
         }
     }
@@ -524,5 +494,10 @@ public class TransactionListController {
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
+    }
+
+    @FXML
+    private void backTo(){
+        SceneSwitcher.switchTo("Dashboard.fxml", (Stage) backButton.getScene().getWindow());
     }
 }
