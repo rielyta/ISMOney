@@ -474,15 +474,6 @@ public class DashboardController {
         });
     }
 
-    public void onSceneActivated() {
-        System.out.println("Dashboard scene activated - refreshing data");
-        refreshDashboard();
-
-        if (autoRefreshTimeline != null && autoRefreshTimeline.getStatus() != Animation.Status.RUNNING) {
-            autoRefreshTimeline.play();
-        }
-    }
-
     public static class ActivityLog {
         private final SimpleStringProperty date;
         private final SimpleStringProperty type;
@@ -502,10 +493,6 @@ public class DashboardController {
 
         public void setDate(String date) {
             this.date.set(date != null ? date : "");
-        }
-
-        public SimpleStringProperty dateProperty() {
-            return date;
         }
 
         public String getType() {
@@ -538,10 +525,6 @@ public class DashboardController {
 
         public void setAmount(String amount) {
             this.amount.set(amount != null ? amount : "");
-        }
-
-        public SimpleStringProperty amountProperty() {
-            return amount;
         }
     }
 }
