@@ -6,7 +6,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<AnchorPane prefHeight="491.0" prefWidth="756.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.ismoney.LoginController">
+<AnchorPane prefHeight="491.0" prefWidth="756.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.ismoney.controller.LoginController">
     <children>
         <Pane fx:id="backgroundPanel" layoutY="-4.0" prefHeight="498.0" prefWidth="780.0" style="-fx-background-color: linear-gradient(from 0% 0% to 100% 0%, #FFFFFF, #63DBF3);">
             <opaqueInsets>
@@ -55,7 +55,7 @@
                                 <Font size="12.0" />
                             </font>
                         </Label>
-                        <Button fx:id="loginButton" mnemonicParsing="false" onAction="#onLogin" prefHeight="35.0" prefWidth="200.0" style="-fx-background-color: rgba(58, 162, 233, 0.7); -fx-font-family: Poppins; -fx-font-weight: Bold; -fx-font-size: 14px; -fx-background-radius: 7;" text="Masuk" textFill="WHITE">
+                        <Button fx:id="loginButton" mnemonicParsing="false" onAction="#onLogin" prefHeight="35.0" prefWidth="200.0" style="-fx-background-color: rgba(58, 162, 233, 0.7); -fx-font-family: Poppins; -fx-font-weight: Bold; -fx-cursor: hand; -fx-font-size: 14px; -fx-background-radius: 7;" text="Masuk" textFill="WHITE">
                             <font>
                                 <Font name="Segoe UI" size="12.0" />
                             </font>
@@ -66,7 +66,7 @@
                         <HBox alignment="CENTER" prefHeight="13.0" prefWidth="156.0">
                             <children>
                                 <Label prefHeight="16.0" prefWidth="116.0" style="-fx-font-family: Poppins;" text="Belum punya akun?" textFill="#5c5d5e" />
-                                <Label fx:id="signupLabel" onMouseClicked="#onSignupClick" style="-fx-font-family: Poppins;" text="Daftar" textFill="#0f76dc" />
+                                <Label fx:id="signupLabel" onMouseClicked="#onSignupClick" style="-fx-font-family: Poppins; -fx-cursor: hand;" text="Daftar" textFill="#0f76dc" />
                             </children>
                             <VBox.margin>
                                 <Insets bottom="10.0" left="5.0" right="5.0" top="5.0" />
