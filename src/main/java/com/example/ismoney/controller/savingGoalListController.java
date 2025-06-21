@@ -2,6 +2,7 @@ package com.example.ismoney.controller;
 
 import com.example.ismoney.dao.SavingGoalDAO;
 import com.example.ismoney.model.SavingGoal;
+import com.example.ismoney.service.SavingGoalService;
 import com.example.ismoney.util.SceneSwitcher;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -10,11 +11,13 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-
 import javafx.stage.Stage;
 
 import java.math.BigDecimal;
 import java.net.URL;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.util.List;
 import java.util.ResourceBundle;
 
@@ -37,19 +40,85 @@ public class savingGoalListController implements Initializable {
     @FXML private Button searchButton;
 
     private SavingGoalDAO savingGoalDAO;
+    private SavingGoalService savingGoalService;
     private ObservableList<SavingGoal> allGoals;
     private FilteredList<SavingGoal> filteredGoals;
+    private Integer currentUserId;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        savingGoalDAO = new SavingGoalDAO();
-        allGoals = FXCollections.observableArrayList();
-        filteredGoals = new FilteredList<>(allGoals, p -> true);
+        System.out.println("SavingGoalListController initialized!");
 
-        setupTableColumns();
-        setupEventHandlers();
-        setupSearchFunctionality();
-        loadGoals();
+        try {
+            savingGoalDAO = new SavingGoalDAO();
+            savingGoalService = new SavingGoalService();
+
+            // Get current user ID using the same pattern as TransactionListController
+            currentUserId = getCurrentLoggedInUserId();
+            System.out.println("Using user ID for saving goals: " + currentUserId);
+
+            allGoals = FXCollections.observableArrayList();
+            filteredGoals = new FilteredList<>(allGoals, p -> true);
+
+            setupTableColumns();
+            setupEventHandlers();
+            setupSearchFunctionality();
+            loadGoals();
+
+            System.out.println("SavingGoalListController setup completed!");
+        } catch (Exception e) {
+            System.err.println("Error initializing SavingGoalListController: " + e.getMessage());
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Kesalahan", "Gagal menginisialisasi controller: " + e.getMessage());
+        }
+    }
+
+    private Integer getCurrentLoggedInUserId() {
+        try {
+            Integer latestUserId = getLatestUserId();
+            if (latestUserId != null) {
+                System.out.println("Using latest user ID: " + latestUserId);
+                return latestUserId;
+            }
+
+            Integer existingUserId = getFirstExistingUserId();
+            if (existingUserId != null) {
+                System.out.println("Using first existing user ID: " + existingUserId);
+                return existingUserId;
+            }
+
+            System.out.println("No users found, using default ID: 1");
+            return 1;
+        } catch (Exception e) {
+            System.err.println("Error getting current user ID: " + e.getMessage());
+            return 1;
+        }
+    }
+
+    private Integer getLatestUserId() {
+        try (Connection conn = com.example.ismoney.database.DatabaseConfig.getInstance().getConnection()) {
+            PreparedStatement stmt = conn.prepareStatement("SELECT id FROM users ORDER BY created_at DESC, id DESC LIMIT 1");
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("id");
+            }
+        } catch (Exception e) {
+            System.err.println("Error getting latest user ID: " + e.getMessage());
+        }
+        return null;
+    }
+
+    private Integer getFirstExistingUserId() {
+        try (Connection conn = com.example.ismoney.database.DatabaseConfig.getInstance().getConnection()) {
+            PreparedStatement stmt = conn.prepareStatement("SELECT id FROM users ORDER BY id LIMIT 1");
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("id");
+            }
+        } catch (Exception e) {
+            System.err.println("Error getting existing user ID: " + e.getMessage());
+        }
+        return null;
     }
 
     private void setupSearchFunctionality() {
@@ -67,7 +136,6 @@ public class savingGoalListController implements Initializable {
             // Show all goals if search text is empty
             filteredGoals.setPredicate(goal -> true);
         } else {
-
             String lowerCaseFilter = searchText.toLowerCase().trim();
             filteredGoals.setPredicate(goal -> {
                 return goal.getGoalName().toLowerCase().contains(lowerCaseFilter);
@@ -109,7 +177,7 @@ public class savingGoalListController implements Initializable {
             return new javafx.beans.property.SimpleStringProperty("");
         });
 
-        // Custom cell untuk status dengan warna
+        // Custom cell untuk status dgn warna
         statusColumn.setCellFactory(column -> new TableCell<SavingGoal, String>() {
             @Override
             protected void updateItem(String status, boolean empty) {
@@ -139,7 +207,6 @@ public class savingGoalListController implements Initializable {
             }
         });
 
-        // Custom progress bar menggunakan createStyledProgressBar
         progressColumn.setCellFactory(column -> new TableCell<SavingGoal, String>() {
             @Override
             protected void updateItem(String progress, boolean empty) {
@@ -151,13 +218,41 @@ public class savingGoalListController implements Initializable {
                 } else {
                     SavingGoal goal = getTableView().getItems().get(getIndex());
 
-                    // Hitung persentase progress
+                    // hitung persentase progress
                     double progressPercentage = calculateProgressPercentage(goal);
 
-                    // Gunakan createStyledProgressBar
                     ProgressBar styledProgressBar = createStyledProgressBar(progressPercentage, goal);
                     setGraphic(styledProgressBar);
                     setText(null);
+                }
+            }
+        });
+
+        formatCurrencyColumns();
+    }
+
+    private void formatCurrencyColumns() {
+        targetAmountColumn.setCellFactory(column -> new TableCell<SavingGoal, BigDecimal>() {
+            @Override
+            protected void updateItem(BigDecimal amount, boolean empty) {
+                super.updateItem(amount, empty);
+                if (empty || amount == null) {
+                    setText("");
+                } else {
+                    setText("Rp " + String.format("%,.0f", amount.doubleValue()));
+                }
+            }
+        });
+
+        currentAmountColumn.setCellFactory(column -> new TableCell<SavingGoal, BigDecimal>() {
+            @Override
+            protected void updateItem(BigDecimal amount, boolean empty) {
+                super.updateItem(amount, empty);
+                if (empty || amount == null) {
+                    setText("");
+                } else {
+                    setText("Rp " + String.format("%,.0f", amount.doubleValue()));
+                    setStyle("-fx-text-fill: #2196F3; -fx-font-weight: bold;");
                 }
             }
         });
@@ -174,7 +269,6 @@ public class savingGoalListController implements Initializable {
         return 0.0;
     }
 
-    // Method untuk membuat styled progress bar dengan perhitungan yang benar
     private ProgressBar createStyledProgressBar(double progressPercentage, SavingGoal goal) {
         ProgressBar progressBar = new ProgressBar();
 
@@ -187,7 +281,7 @@ public class savingGoalListController implements Initializable {
                     .doubleValue();
         }
 
-        // Pastikan progress tidak melebihi 100%
+        // mastiin progress tidak melebihi 100%
         double progressValue = Math.min(actualProgressPercentage / 100.0, 1.0);
 
         progressBar.setProgress(progressValue);
@@ -206,7 +300,6 @@ public class savingGoalListController implements Initializable {
 
         progressBar.setStyle(barStyle);
 
-        // Tambahkan tooltip dengan informasi yang akurat
         Tooltip tooltip = new Tooltip(String.format(
                 "%s\nCurrent: Rp %,.0f\nTarget: Rp %,.0f\nProgress: %.1f%%\nRemaining: Rp %,.0f",
                 goal.getGoalName(),
@@ -224,7 +317,7 @@ public class savingGoalListController implements Initializable {
     private void setupEventHandlers() {
         addSavingButton.setOnAction(event -> handleAddSaving());
         refreshButton.setOnAction(event -> loadGoals());
-        GoalFormButton.setOnAction(event ->  handleGoalFormButton());
+        GoalFormButton.setOnAction(event -> handleGoalFormButton());
         searchButton.setOnAction(event -> handleFilter());
 
         // Double click untuk edit
@@ -252,6 +345,7 @@ public class savingGoalListController implements Initializable {
             addSavingAmountField.requestFocus();
             return;
         }
+
         try {
             BigDecimal amount = new BigDecimal(addSavingAmountField.getText().trim());
 
@@ -260,7 +354,8 @@ public class savingGoalListController implements Initializable {
                 return;
             }
 
-            boolean success = savingGoalDAO.addSavingToGoal(selectedGoal.getGoalId(), amount);
+            // Using user-specific method from SavingGoalDAO
+            boolean success = savingGoalDAO.addSavingToGoal(selectedGoal.getGoalId(), amount, currentUserId);
 
             if (success) {
                 showAlert(Alert.AlertType.INFORMATION, "Sukses",
@@ -268,10 +363,12 @@ public class savingGoalListController implements Initializable {
                 addSavingAmountField.clear();
                 loadGoals(); // Refresh data
 
-                // Ambil data goal yang sudah diupdate untuk mengecek status
-                SavingGoal updatedGoal = savingGoalDAO.getSavingGoalById(selectedGoal.getGoalId());
+                // Ambil data goal yang sudah diupdate untuk ngecek status
+                SavingGoal updatedGoal = savingGoalDAO.getSavingGoalById(selectedGoal.getGoalId(), currentUserId);
                 if (updatedGoal != null && updatedGoal.isCompleted()) {
-                    savingGoalDAO.updateGoalStatusBasedOnProgress(selectedGoal.getGoalId(), "COMPLETED");
+                    savingGoalDAO.updateGoalStatusBasedOnProgress(selectedGoal.getGoalId(), "COMPLETED", currentUserId);
+                    showAlert(Alert.AlertType.INFORMATION, "Selamat!",
+                            "Target " + selectedGoal.getGoalName() + " telah tercapai! 🎉");
                 }
             } else {
                 showAlert(Alert.AlertType.ERROR, "Error", "Gagal menambahkan tabungan");
@@ -281,33 +378,59 @@ public class savingGoalListController implements Initializable {
             showAlert(Alert.AlertType.ERROR, "Error", "Jumlah harus berupa angka");
             addSavingAmountField.requestFocus();
         } catch (Exception e) {
+            System.err.println("Error adding saving: " + e.getMessage());
+            e.printStackTrace();
             showAlert(Alert.AlertType.ERROR, "Error", "Error: " + e.getMessage());
         }
     }
 
     @FXML
     private void handleGoalFormButton() {
-        try{
+        try {
             SceneSwitcher.switchTo("savingGoals/savingGoalForm.fxml", (Stage) GoalFormButton.getScene().getWindow());
-
         } catch (Exception e) {
-            showAlert(Alert.AlertType.ERROR, "Error", "Gagal membuka form saving goals List: " + e.getMessage());
+            showAlert(Alert.AlertType.ERROR, "Error", "Gagal membuka form saving goals: " + e.getMessage());
             e.printStackTrace();
         }
     }
 
     private void loadGoals() {
         try {
-            List<SavingGoal> goals = savingGoalDAO.getAllSavingGoals();
+            System.out.println("=== DEBUG: Loading saving goals ===");
+            System.out.println("Loading saving goals for user ID: " + currentUserId);
+
+            // Using user-specific method from SavingGoalDAO
+            List<SavingGoal> goals = savingGoalDAO.getSavingGoalsByUserId(currentUserId);
             allGoals.clear();
             allGoals.addAll(goals);
+
+            System.out.println("Loaded " + goals.size() + " saving goals");
+
+            if (goals.isEmpty()) {
+                System.out.println("No saving goals found for user ID " + currentUserId);
+            } else {
+                for (int i = 0; i < Math.min(3, goals.size()); i++) {
+                    SavingGoal g = goals.get(i);
+                    System.out.println("Goal " + (i + 1) + ": ID=" + g.getGoalId() +
+                            ", Name=" + g.getGoalName() +
+                            ", Target=" + g.getTargetAmount() +
+                            ", Current=" + g.getCurrentAmount() +
+                            ", Status=" + g.getStatus());
+                }
+                if (goals.size() > 3) {
+                    System.out.println("... and " + (goals.size() - 3) + " more goals");
+                }
+            }
 
             // Reset search filter after loading new data
             String currentSearchText = searchField.getText();
             if (currentSearchText != null && !currentSearchText.trim().isEmpty()) {
                 filterGoals(currentSearchText);
             }
+
         } catch (Exception e) {
+            System.err.println("Error loading saving goals: " + e.getMessage());
+            e.printStackTrace();
             showAlert(Alert.AlertType.ERROR, "Error", "Gagal memuat data: " + e.getMessage());
         }
     }
@@ -348,7 +471,7 @@ public class savingGoalListController implements Initializable {
     }
 
     @FXML
-    private void backTo(){
+    private void backTo() {
         SceneSwitcher.switchTo("Dashboard.fxml", (Stage) backButton.getScene().getWindow());
     }
 }

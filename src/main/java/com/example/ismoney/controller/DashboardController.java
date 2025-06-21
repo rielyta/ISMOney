@@ -281,7 +281,7 @@ public class DashboardController {
 
             // Load recent saving goals activities
             try {
-                List<SavingGoal> recentGoals = savingGoalDAO.getRecentUpdatedGoals(5);
+                List<SavingGoal> recentGoals = savingGoalDAO.getRecentUpdatedGoalsByUserId(currentUserId, 5);
                 for (SavingGoal goal : recentGoals) {
                     if (goal.getCurrentAmount().compareTo(BigDecimal.ZERO) > 0) {
                         ActivityLog log = new ActivityLog(

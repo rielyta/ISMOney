@@ -1,172 +1,300 @@
 package com.example.ismoney.controller;
 
-import com.example.ismoney.dao.SavingGoalDAO;
+import com.example.ismoney.dao.UserDAOImpl;
 import com.example.ismoney.model.SavingGoal;
+import com.example.ismoney.model.User;
+import com.example.ismoney.service.SavingGoalService;
 import com.example.ismoney.util.SceneSwitcher;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
 
 import java.math.BigDecimal;
-import java.net.URL;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.LocalDate;
-import java.util.ResourceBundle;
 
-public class savingGoalFormController implements Initializable {
+public class savingGoalFormController {
 
     @FXML private TextField goalNameField;
     @FXML private TextField targetAmountField;
     @FXML private TextField currentAmountField;
     @FXML private DatePicker targetDatePicker;
     @FXML private ComboBox<String> statusComboBox;
+    @FXML private ProgressBar progressBar;
+    @FXML private Label progressLabel;
     @FXML private Button simpanButton;
     @FXML private Button batalButton;
 
-    @FXML private ProgressBar progressBar;
-    @FXML private Label progressLabel;
-    @FXML private Label remainingLabel;
-    @FXML private Label statusLabel;
-
-    private SavingGoalDAO savingGoalDAO;
+    private SavingGoalService savingGoalService;
+    private UserDAOImpl userDAO;
+    private Integer currentUserId;
     private SavingGoal currentGoal;
 
-    @Override
-    public void initialize(URL location, ResourceBundle resources) {
-        savingGoalDAO = new SavingGoalDAO();
+    @FXML
+    public void initialize() {
+        System.out.println("SavingGoalFormController initialized!");
 
-        setupStatusComboBox();
-        setupEventHandlers();
-        setupDefaultValues();
+        try {
+            savingGoalService = new SavingGoalService();
+            userDAO = new UserDAOImpl();
+
+            currentUserId = getCurrentLoggedInUserId();
+            System.out.println("Using user ID for saving goal form: " + currentUserId);
+
+            setupFormDefaults();
+            setupEventHandlers();
+
+            System.out.println("SavingGoalFormController setup completed!");
+
+        } catch (Exception e) {
+            System.err.println("Error initializing SavingGoalFormController: " + e.getMessage());
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Kesalahan", "Gagal menginisialisasi form: " + e.getMessage());
+        }
     }
 
-    private void setupStatusComboBox() {
+    private Integer getCurrentLoggedInUserId() {
+        try {
+            Integer latestUserId = getLatestUserId();
+            if (latestUserId != null) {
+                System.out.println("Using latest user ID: " + latestUserId);
+                return latestUserId;
+            }
+
+            Integer existingUserId = getFirstExistingUserId();
+            if (existingUserId != null) {
+                System.out.println("Using first existing user ID: " + existingUserId);
+                return existingUserId;
+            }
+
+            User testUser = new User("testuser", "test@example.com", userDAO.hashPassword("password123"));
+            if (userDAO.save(testUser)) {
+                System.out.println("Created test user with ID: " + testUser.getId());
+                return testUser.getId();
+            }
+
+            System.out.println("No users found, using default ID: 1");
+            return 1;
+        } catch (Exception e) {
+            System.err.println("Error getting current user ID: " + e.getMessage());
+            return 1;
+        }
+    }
+
+    private Integer getLatestUserId() {
+        try (Connection conn = com.example.ismoney.database.DatabaseConfig.getInstance().getConnection()) {
+            PreparedStatement stmt = conn.prepareStatement("SELECT id FROM users ORDER BY created_at DESC, id DESC LIMIT 1");
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("id");
+            }
+        } catch (Exception e) {
+            System.err.println("Error getting latest user ID: " + e.getMessage());
+        }
+        return null;
+    }
+
+    private Integer getFirstExistingUserId() {
+        try (Connection conn = com.example.ismoney.database.DatabaseConfig.getInstance().getConnection()) {
+            PreparedStatement stmt = conn.prepareStatement("SELECT id FROM users ORDER BY id LIMIT 1");
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("id");
+            }
+        } catch (Exception e) {
+            System.err.println("Error getting existing user ID: " + e.getMessage());
+        }
+        return null;
+    }
+
+    private void setupFormDefaults() {
         statusComboBox.getItems().addAll("ACTIVE", "COMPLETED", "PAUSED");
         statusComboBox.setValue("ACTIVE");
+
+        currentAmountField.setText("0");
+        targetDatePicker.setValue(LocalDate.now().plusMonths(1));
+
+        updateProgressDisplay();
     }
 
     private void setupEventHandlers() {
-        simpanButton.setOnAction(event -> handleSimpan());
-        batalButton.setOnAction(event -> handleBatal());
-
-        // Update progress saat amount berubah
-        targetAmountField.textProperty().addListener((obs, oldVal, newVal) -> updateProgressDisplay());
+        // updae progress pas di update amount nya
         currentAmountField.textProperty().addListener((obs, oldVal, newVal) -> updateProgressDisplay());
-    }
+        targetAmountField.textProperty().addListener((obs, oldVal, newVal) -> updateProgressDisplay());
 
-    private void setupDefaultValues() {
-        targetDatePicker.setValue(LocalDate.now().plusMonths(1));
-        currentAmountField.setText("0");
-        updateProgressDisplay();
+        simpanButton.setOnAction(event -> handleSaveSavingGoal());
+
+        batalButton.setOnAction(event -> handleBatal());
     }
 
     private void updateProgressDisplay() {
         try {
-            BigDecimal target = new BigDecimal(targetAmountField.getText().trim().isEmpty() ? "0" : targetAmountField.getText().trim());
-            BigDecimal current = new BigDecimal(currentAmountField.getText().trim().isEmpty() ? "0" : currentAmountField.getText().trim());
+            String currentAmountText = currentAmountField.getText().trim();
+            String targetAmountText = targetAmountField.getText().trim();
 
-            if (target.compareTo(BigDecimal.ZERO) > 0) {
-                double progress = current.divide(target, 4, BigDecimal.ROUND_HALF_UP).doubleValue();
-                progressBar.setProgress(progress);
-                progressLabel.setText(String.format("%.1f%%", progress * 100));
-
-                BigDecimal remaining = target.subtract(current);
-                remainingLabel.setText(String.format("Sisa: Rp %,.2f", remaining));
-
-                if (current.compareTo(target) >= 0) {
-                    statusLabel.setText("COMPLETED");
-                    statusLabel.setStyle("-fx-text-fill: green; -fx-font-weight: bold;");
-                    progressBar.setStyle("-fx-accent: green;");
-                } else {
-                    statusLabel.setText("IN_PROGRESS");
-                    statusLabel.setStyle("-fx-text-fill: blue;");
-                    progressBar.setStyle("-fx-accent: blue;");
-                }
-            } else {
+            if (currentAmountText.isEmpty() || targetAmountText.isEmpty()) {
                 progressBar.setProgress(0);
                 progressLabel.setText("0%");
-                remainingLabel.setText("Sisa: Rp 0");
-                statusLabel.setText("IN_PROGRESS");
+                return;
             }
+
+            BigDecimal currentAmount = new BigDecimal(currentAmountText);
+            BigDecimal targetAmount = new BigDecimal(targetAmountText);
+
+            if (targetAmount.compareTo(BigDecimal.ZERO) == 0) {
+                progressBar.setProgress(0);
+                progressLabel.setText("0%");
+                return;
+            }
+
+            double progress = currentAmount.divide(targetAmount, 4, BigDecimal.ROUND_HALF_UP).doubleValue();
+            progress = Math.min(progress, 1.0); // Cap at 100%
+
+            progressBar.setProgress(progress);
+            progressLabel.setText(String.format("%.1f%%", progress * 100));
 
         } catch (NumberFormatException e) {
             progressBar.setProgress(0);
             progressLabel.setText("0%");
-            remainingLabel.setText("Sisa: Rp 0");
         }
     }
 
-    private void handleSimpan() {
+    @FXML
+    private void handleSaveSavingGoal() {
+        System.out.println("Save saving goal button clicked!");
+
+        if (currentUserId == null) {
+            showAlert(Alert.AlertType.ERROR, "Error", "Tidak ada user yang valid. Silakan login terlebih dahulu.");
+            return;
+        }
+
+        if (!validateInput()) return;
+
         try {
-            if (!validateInput()) {
-                return;
-            }
+            // get data
+            String goalName = goalNameField.getText().trim();
+            BigDecimal targetAmount = new BigDecimal(targetAmountField.getText().trim());
+            BigDecimal currentAmount = new BigDecimal(currentAmountField.getText().trim());
+            LocalDate targetDate = targetDatePicker.getValue();
+            String status = statusComboBox.getValue();
 
-            SavingGoal goal = currentGoal != null ? currentGoal : new SavingGoal();
+            SavingGoal savingGoal;
+            if (currentGoal != null) {
+                savingGoal = currentGoal;
+                savingGoal.setGoalName(goalName);
+                savingGoal.setTargetAmount(targetAmount);
+                savingGoal.setCurrentAmount(currentAmount);
+                savingGoal.setTargetDate(targetDate);
+                savingGoal.setStatus(status);
 
-            goal.setGoalName(goalNameField.getText().trim());
-            goal.setTargetAmount(new BigDecimal(targetAmountField.getText().trim()));
-            goal.setCurrentAmount(new BigDecimal(currentAmountField.getText().trim()));
-            goal.setTargetDate(targetDatePicker.getValue());
-            goal.setStatus(statusComboBox.getValue());
+                System.out.println("Attempting to update saving goal with user ID " + currentUserId + ": " + savingGoal.getGoalName());
 
-            boolean success;
-            if (currentGoal == null) {
-                success = savingGoalDAO.addSavingGoal(goal);
+                savingGoalService.updateSavingGoal(savingGoal, currentUserId);
+                showAlert(Alert.AlertType.INFORMATION, "Berhasil", "Saving goal berhasil diperbarui!");
+
             } else {
-                success = savingGoalDAO.updateSavingGoal(goal);
+                // Create new goal
+                savingGoal = new SavingGoal();
+                savingGoal.setUserId(currentUserId);
+                savingGoal.setGoalName(goalName);
+                savingGoal.setTargetAmount(targetAmount);
+                savingGoal.setCurrentAmount(currentAmount);
+                savingGoal.setTargetDate(targetDate);
+                savingGoal.setStatus(status);
+
+                System.out.println("Attempting to create saving goal with user ID " + currentUserId + ": " + savingGoal.getGoalName());
+
+                // Save via service
+                savingGoalService.createSavingGoal(savingGoal, currentUserId);
+                showAlert(Alert.AlertType.INFORMATION, "Berhasil", "Saving goal berhasil disimpan!");
             }
 
-            if (success) {
-                showAlert(Alert.AlertType.INFORMATION, "Sukses",
-                        currentGoal == null ? "Goal berhasil ditambahkan" : "Goal berhasil diupdate");
-                clearForm();
-                SceneSwitcher.switchTo("savingGoals/savingGoalList.fxml", (Stage) simpanButton.getScene().getWindow());
-            } else {
-                showAlert(Alert.AlertType.ERROR, "Error", "Gagal menyimpan goal");
-            }
+            clearForm();
 
+            // Navigate to SavingGoalList after successful save
+            Stage currentStage = (Stage) goalNameField.getScene().getWindow();
+            SceneSwitcher.switchTo("savingGoals/savingGoalList.fxml", currentStage);
+            System.out.println("Successfully navigated to SavingGoalList after save");
+
+        } catch (SQLException e) {
+            System.err.println("Database error saving saving goal: " + e.getMessage());
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Error Database", "Gagal menyimpan saving goal ke database: " + e.getMessage());
         } catch (Exception e) {
-            showAlert(Alert.AlertType.ERROR, "Error", "Error: " + e.getMessage());
+            System.err.println("Error saving saving goal: " + e.getMessage());
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Error", "Terjadi kesalahan saat menyimpan saving goal: " + e.getMessage());
         }
     }
 
     private boolean validateInput() {
-        if (goalNameField.getText().trim().isEmpty()) {
-            showAlert(Alert.AlertType.ERROR, "Error", "Nama goal tidak boleh kosong");
+        // Validate goal name
+        if (goalNameField.getText() == null || goalNameField.getText().trim().isEmpty()) {
+            showAlert(Alert.AlertType.ERROR, "Validasi Gagal", "Nama goal harus diisi!");
             goalNameField.requestFocus();
+            return false;
+        }
+
+        // Validate target amount
+        if (targetAmountField.getText() == null || targetAmountField.getText().trim().isEmpty()) {
+            showAlert(Alert.AlertType.ERROR, "Validasi Gagal", "Target amount harus diisi!");
+            targetAmountField.requestFocus();
             return false;
         }
 
         try {
             BigDecimal targetAmount = new BigDecimal(targetAmountField.getText().trim());
             if (targetAmount.compareTo(BigDecimal.ZERO) <= 0) {
-                showAlert(Alert.AlertType.ERROR, "Error", "Target amount harus lebih besar dari 0");
+                showAlert(Alert.AlertType.ERROR, "Validasi Gagal", "Target amount harus lebih dari 0!");
                 targetAmountField.requestFocus();
                 return false;
             }
         } catch (NumberFormatException e) {
-            showAlert(Alert.AlertType.ERROR, "Error", "Target amount harus berupa angka");
+            showAlert(Alert.AlertType.ERROR, "Validasi Gagal", "Target amount harus berupa angka yang valid!");
             targetAmountField.requestFocus();
+            return false;
+        }
+
+        // Validate current amount
+        if (currentAmountField.getText() == null || currentAmountField.getText().trim().isEmpty()) {
+            showAlert(Alert.AlertType.ERROR, "Validasi Gagal", "Current amount harus diisi!");
+            currentAmountField.requestFocus();
             return false;
         }
 
         try {
             BigDecimal currentAmount = new BigDecimal(currentAmountField.getText().trim());
             if (currentAmount.compareTo(BigDecimal.ZERO) < 0) {
-                showAlert(Alert.AlertType.ERROR, "Error", "Current amount tidak boleh negatif");
+                showAlert(Alert.AlertType.ERROR, "Validasi Gagal", "Current amount tidak boleh negatif!");
                 currentAmountField.requestFocus();
                 return false;
             }
         } catch (NumberFormatException e) {
-            showAlert(Alert.AlertType.ERROR, "Error", "Current amount harus berupa angka");
+            showAlert(Alert.AlertType.ERROR, "Validasi Gagal", "Current amount harus berupa angka yang valid!");
             currentAmountField.requestFocus();
             return false;
         }
 
+        // Validate target date
         if (targetDatePicker.getValue() == null) {
-            showAlert(Alert.AlertType.ERROR, "Error", "Pilih target date");
+            showAlert(Alert.AlertType.ERROR, "Validasi Gagal", "Target date harus dipilih!");
             targetDatePicker.requestFocus();
+            return false;
+        }
+
+        if (targetDatePicker.getValue().isBefore(LocalDate.now())) {
+            showAlert(Alert.AlertType.ERROR, "Validasi Gagal", "Target date tidak boleh di masa lalu!");
+            targetDatePicker.requestFocus();
+            return false;
+        }
+
+        // Validate status
+        if (statusComboBox.getValue() == null) {
+            showAlert(Alert.AlertType.ERROR, "Validasi Gagal", "Status harus dipilih!");
+            statusComboBox.requestFocus();
             return false;
         }
 

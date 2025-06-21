@@ -6,28 +6,27 @@ import java.time.LocalDate;
 
 public class SavingGoal {
     private Integer goalId;
+    private Integer userId;
     private String goalName;
     private BigDecimal targetAmount;
     private BigDecimal currentAmount;
     private LocalDate targetDate;
     private LocalDate createdDate;
-    private String description;
     private String status;
     private LocalDate updatedAt;
 
     public SavingGoal() {
-        // Inisialisasi default values jika diperlukan
         this.currentAmount = BigDecimal.ZERO;
         this.createdDate = LocalDate.now();
         this.updatedAt = LocalDate.now();
         this.status = "ACTIVE";
     }
 
-
-    // Constructor tambahan untuk pemanggilan dari DAO
-    public SavingGoal(Integer goalId, String goalName, BigDecimal targetAmount, BigDecimal currentAmount,
-                      LocalDate targetDate, LocalDate createdDate, String status) {
+    // utkpemanggilan dari DAO
+    public SavingGoal(Integer goalId, Integer userId, String goalName, BigDecimal targetAmount,
+                      BigDecimal currentAmount, LocalDate targetDate, LocalDate createdDate, String status) {
         this.goalId = goalId;
+        this.userId = userId;
         this.goalName = goalName;
         this.targetAmount = targetAmount;
         this.currentAmount = currentAmount;
@@ -72,10 +71,11 @@ public class SavingGoal {
         }
     }
 
-    
-    // Getters and Setters
     public Integer getGoalId() { return goalId; }
     public void setGoalId(Integer goalId) { this.goalId = goalId; }
+
+    public Integer getUserId() { return userId; }
+    public void setUserId(Integer userId) { this.userId = userId; }
 
     public String getGoalName() { return goalName; }
     public void setGoalName(String goalName) { this.goalName = goalName; }
@@ -91,9 +91,6 @@ public class SavingGoal {
 
     public LocalDate getCreatedDate() { return createdDate; }
     public void setCreatedDate(LocalDate createdDate) { this.createdDate = createdDate; }
-
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
