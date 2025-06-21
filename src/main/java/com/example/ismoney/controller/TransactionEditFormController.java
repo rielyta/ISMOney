@@ -32,6 +32,7 @@ public class TransactionEditFormController {
     // Cache untuk menyimpan semua kategori
     private List<Category> allCategories = new ArrayList<>();
 
+    //inisialisasi komponen
     @FXML
     public void initialize() {
         System.out.println("TransactionEditFormController initialized!");
@@ -42,10 +43,8 @@ public class TransactionEditFormController {
 
             typeComboBox.setItems(FXCollections.observableArrayList("Pendapatan", "Pengeluaran"));
 
-            // Load semua kategori dari database ke cache
             loadCategoriesFromDatabase();
 
-            // Setup event handlers utk mendapatkan kategori sesuai tipe
             typeComboBox.setOnAction(event -> {
                 String selectedType = typeComboBox.getValue();
                 if (selectedType != null) {
@@ -53,7 +52,6 @@ public class TransactionEditFormController {
                 }
             });
 
-            // Tambah event handler untuk mendeteksi pilihan "Tambah Kategori Baru"
             categoryComboBox.setOnAction(event -> {
                 Category selected = categoryComboBox.getValue();
                 if (selected != null && selected.getCategoriesId() == -1) {
@@ -82,7 +80,6 @@ public class TransactionEditFormController {
             return;
         }
 
-        // tampilkan detail transaksi (utk debug saja)
         System.out.println("Transaction Details:");
         System.out.println("  ID: " + transaction.getTransactionId());
         System.out.println("  Amount: " + transaction.getAmount());
@@ -93,20 +90,17 @@ public class TransactionEditFormController {
 
         this.currentTransaction = transaction;
 
-        // memastikan categories sudah ter-load
         System.out.println("Current categories count: " + allCategories.size());
         if (allCategories.isEmpty()) {
             System.err.println("WARNING: No categories loaded! Reloading from database...");
             loadCategoriesFromDatabase();
         }
 
-        // menampilkan categories yang ter-load (debug)
         System.out.println("Available categories:");
         for (Category cat : allCategories) {
             System.out.println("  - " + cat.getName() + " (ID: " + cat.getCategoriesId() + ", Type: " + cat.getType() + ")");
         }
 
-        // Populate fields setelah data siap
         populateFields();
         System.out.println("DEBUG: setTransaction completed");
     }
@@ -153,7 +147,6 @@ public class TransactionEditFormController {
         try {
             System.out.println("Populating fields for transaction ID: " + currentTransaction.getTransactionId());
 
-            // Set nominal transaksi
             if (currentTransaction.getAmount() != null) {
                 String amountText = currentTransaction.getAmount().toString();
                 amountField.setText(amountText);
@@ -163,7 +156,6 @@ public class TransactionEditFormController {
                 System.err.println("WARNING: Amount is null!");
             }
 
-            // Set tipe transaksi
             if (currentTransaction.getType() != null) {
                 String typeValue = currentTransaction.getType() == TransactionType.INCOME ? "Pendapatan" : "Pengeluaran";
                 typeComboBox.setValue(typeValue);
@@ -173,7 +165,6 @@ public class TransactionEditFormController {
                 System.err.println("WARNING: Type is null!");
             }
 
-            // Set tanggal transaksi
             if (currentTransaction.getTransactionDate() != null) {
                 datePicker.setValue(currentTransaction.getTransactionDate());
                 System.out.println("Set date picker to: " + currentTransaction.getTransactionDate());
@@ -182,13 +173,11 @@ public class TransactionEditFormController {
                 System.err.println("WARNING: Date is null!");
             }
 
-            // Set catatan
             String noteText = currentTransaction.getNote() != null ? currentTransaction.getNote() : "";
             noteField.setText(noteText);
             System.out.println("Set note field to: " + (noteText.isEmpty() ? "(empty)" : noteText));
             System.out.println("Note field current value: " + noteField.getText());
 
-            // Filter kategori dan set kategori yang sesuai
             String typeValue = currentTransaction.getType() == TransactionType.INCOME ? "Pendapatan" : "Pengeluaran";
             filterCategoriesByTypeAndSetCategory(typeValue);
 
@@ -206,16 +195,13 @@ public class TransactionEditFormController {
         try {
             System.out.println("Filtering categories for type: " + selectedType);
 
-            // Filter kategori berdasarkan tipe (termasuk opsi tambah kategori)
             List<Category> filtered = allCategories.stream()
                     .filter(c -> c.getCategoriesId() == -1 || c.getType().equals(selectedType))
                     .toList();
 
-            // Update dropdown dengan kategori yang sudah difilter
             categoryComboBox.setItems(FXCollections.observableArrayList(filtered));
             System.out.println("Filtered categories count: " + (filtered.size() - 1)); // -1 untuk opsi tambah kategori
 
-            // Langsung set kategori yang sesuai dengan transaksi saat ini
             if (currentTransaction != null) {
                 Category currentCategory = filtered.stream()
                         .filter(c -> c.getCategoriesId().equals(currentTransaction.getCategoryId()))
@@ -227,7 +213,6 @@ public class TransactionEditFormController {
                     System.out.println("Successfully set category: " + currentCategory.getName() + " (ID: " + currentCategory.getCategoriesId() + ")");
                 } else {
                     System.err.println("Category with ID " + currentTransaction.getCategoryId() + " not found in filtered list");
-                    // Debug: tampilkan semua kategori yang tersedia
                     System.out.println("Available categories after filtering:");
                     filtered.forEach(cat -> {
                         if (cat.getCategoriesId() != -1) {
@@ -248,15 +233,11 @@ public class TransactionEditFormController {
         try {
             System.out.println("User changed type to: " + selectedType);
 
-            // Filter kategori berdasarkan tipe (termasuk opsi tambah kategori)
             List<Category> filtered = allCategories.stream()
                     .filter(c -> c.getCategoriesId() == -1 || c.getType().equals(selectedType))
                     .toList();
 
-            // Update dropdown dengan kategori yang sudah difilter
             categoryComboBox.setItems(FXCollections.observableArrayList(filtered));
-
-            // Reset pilihan kategori karena user mengubah tipe
             categoryComboBox.setValue(null);
 
             System.out.println("Filtered categories for user selection: " + (filtered.size() - 1) + " categories");
@@ -295,7 +276,6 @@ public class TransactionEditFormController {
                 Category newCategory = new Category(0, name, type);
                 try {
                     if (categoryDAO.addCategory(newCategory)) {
-                        // Reload categories from database to get the correct ID
                         loadCategoriesFromDatabase();
 
                         Category addedCategory = allCategories.stream()
@@ -336,11 +316,9 @@ public class TransactionEditFormController {
             return;
         }
 
-        // Validate input
         if (!validateInput()) return;
 
         try {
-            // Update transaction data
             BigDecimal amount = new BigDecimal(amountField.getText().trim());
             String type = typeComboBox.getValue();
             Category category = categoryComboBox.getValue();
@@ -355,13 +333,11 @@ public class TransactionEditFormController {
 
             System.out.println("Attempting to update transaction: " + currentTransaction);
 
-            // Save to database
             boolean success = transactionDAO.updateTransaction(currentTransaction);
 
             if (success) {
                 showSuccessAlert("Berhasil", "Transaksi berhasil diperbarui!");
 
-                // Navigate kembali ke TransactionList
                 navigateToTransactionList();
             } else {
                 showAlert("Error", "Gagal memperbarui transaksi ke database.");
@@ -376,7 +352,6 @@ public class TransactionEditFormController {
 
     //validasi input
     private boolean validateInput() {
-        // Validate nominal
         if (amountField.getText() == null || amountField.getText().trim().isEmpty()) {
             showAlert("Validasi Gagal", "Nominal harus diisi!");
             amountField.requestFocus();
@@ -396,21 +371,18 @@ public class TransactionEditFormController {
             return false;
         }
 
-        // Validate type
         if (typeComboBox.getValue() == null) {
             showAlert("Validasi Gagal", "Tipe transaksi harus dipilih!");
             typeComboBox.requestFocus();
             return false;
         }
 
-        // Validate category (pastikan bukan opsi "Tambah Kategori Baru")
         if (categoryComboBox.getValue() == null || categoryComboBox.getValue().getCategoriesId() == -1) {
             showAlert("Validasi Gagal", "Kategori harus dipilih!");
             categoryComboBox.requestFocus();
             return false;
         }
 
-        // Validate date
         if (datePicker.getValue() == null) {
             showAlert("Validasi Gagal", "Tanggal transaksi harus dipilih!");
             datePicker.requestFocus();

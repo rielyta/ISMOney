@@ -51,6 +51,8 @@ public class TransactionListController {
     private ObservableList<Transaction> allTransactions;
     private Integer currentUserId;
     private Map<Integer, Category> categoryCache = new HashMap<>();
+
+    //inisialisasi semua komponen
     @FXML
     public void initialize() {
         System.out.println("TransactionListController initialized!");
@@ -78,9 +80,9 @@ public class TransactionListController {
         }
     }
 
+    //mendapatkan ID user yang sedang login dari system properties
     private Integer getCurrentLoggedInUserId() {
         try {
-            // Baca dari system properties (user yang sedang login)
             String currentUserIdStr = System.getProperty("current.user.id");
             if (currentUserIdStr != null && !currentUserIdStr.trim().isEmpty()) {
                 try {
@@ -91,11 +93,7 @@ public class TransactionListController {
                     System.err.println("Invalid user ID in system property: " + currentUserIdStr);
                 }
             }
-
-            //  Redirect ke login jika tidak ada user yang login
             System.out.println("No logged-in user found. Should redirect to login.");
-
-            // Untuk development/testing: gunakan user ID tertentu
             System.out.println("Using development user ID 1 for testing");
             return 1;
 
@@ -105,33 +103,7 @@ public class TransactionListController {
         }
     }
 
-
-    private Integer getLatestUserId() {
-        try (Connection conn = com.example.ismoney.database.DatabaseConfig.getInstance().getConnection()) {
-            PreparedStatement stmt = conn.prepareStatement("SELECT id FROM users ORDER BY created_at DESC, id DESC LIMIT 1");
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                return rs.getInt("id");
-            }
-        } catch (Exception e) {
-            System.err.println("Error getting latest user ID: " + e.getMessage());
-        }
-        return null;
-    }
-
-    private Integer getFirstExistingUserId() {
-        try (Connection conn = com.example.ismoney.database.DatabaseConfig.getInstance().getConnection()) {
-            PreparedStatement stmt = conn.prepareStatement("SELECT id FROM users ORDER BY id LIMIT 1");
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                return rs.getInt("id");
-            }
-        } catch (Exception e) {
-            System.err.println("Error getting existing user ID: " + e.getMessage());
-        }
-        return null;
-    }
-
+    //load semua kategori
     private void loadCategoriesCache() {
         try {
             List<Category> categories = categoryDAO.getAllCategories();
@@ -145,11 +117,13 @@ public class TransactionListController {
         }
     }
 
+    //convert  category ID menjadi nama kategori
     private String getCategoryNameFromCache(Integer categoryId) {
         Category category = categoryCache.get(categoryId);
         return category != null ? category.getName() : "Unknown";
     }
 
+    //Setup chart kosong dengan konfigurasi awal
     private void setupChart() {
         lineChart.setTitle("Belum Ada Data Transaksi");
         lineChart.setLegendVisible(true);
@@ -167,6 +141,7 @@ public class TransactionListController {
         lineChart.setVerticalZeroLineVisible(false);
     }
 
+    //Setup kolom-kolom table
     private void setupTableColumns() {
         dateColumn.setCellValueFactory(cellData ->
                 new SimpleStringProperty(cellData.getValue().getTransactionDate()
@@ -221,6 +196,7 @@ public class TransactionListController {
         formatCurrencyColumns();
     }
 
+    //Format mata uang (Rp) untuk kolom nominal
     private void formatCurrencyColumns() {
         incomeColumn.setCellFactory(column -> new TableCell<Transaction, BigDecimal>() {
             @Override
@@ -263,11 +239,13 @@ public class TransactionListController {
         });
     }
 
+    //setup dropdown filter (Semua, Pemasukan, Pengeluaran)
     private void setupFilterControls() {
         filterComboBox.setItems(FXCollections.observableArrayList("Semua", "Pemasukan", "Pengeluaran"));
         filterComboBox.setValue("Semua");
     }
 
+    //Setup listener untuk deteksi row yang dipilih di table
     private void setupTableSelectionListener() {
         transactionTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
             editButton.setDisable(newSelection == null);
@@ -278,6 +256,7 @@ public class TransactionListController {
         deleteButton.setDisable(true);
     }
 
+    //Load semua transaksi user dari database
     private void loadTransactions() {
         try {
             System.out.println("=== DEBUG: Loading transactions ===");
@@ -313,6 +292,7 @@ public class TransactionListController {
         }
     }
 
+    //debug cek transaksi
     private void checkAllTransactions() {
         try (Connection conn = com.example.ismoney.database.DatabaseConfig.getInstance().getConnection()) {
             PreparedStatement stmt = conn.prepareStatement("SELECT user_id, COUNT(*) as count FROM transactions GROUP BY user_id ORDER BY user_id");
@@ -334,6 +314,7 @@ public class TransactionListController {
         }
     }
 
+    //Update chart dengan data transaksi terbaru
     private void updateChart() {
         try {
             if (allTransactions == null || allTransactions.isEmpty()) {
@@ -396,7 +377,7 @@ public class TransactionListController {
     }
 
 
-
+    //Styling visual chart (warna garis, ketebalan)
     private void styleChartLines() {
 
         lineChart.applyCss();
@@ -412,6 +393,7 @@ public class TransactionListController {
         }
     }
 
+    //Filter data table berdasarkan tipe transaksi
     @FXML
     private void handleFilter() {
         if (allTransactions == null || allTransactions.isEmpty()) {
@@ -448,6 +430,7 @@ public class TransactionListController {
     }
 
 
+    //Buka form tambah transaksi
     @FXML
     private void handleAddTransaction() {
         try {
@@ -464,7 +447,7 @@ public class TransactionListController {
     }
 
 
-
+    //Buka form edit dengan data transaksi terpilih dan beri ke edit controller
     @FXML
     private void handleEdit() {
         Transaction selectedTransaction = transactionTable.getSelectionModel().getSelectedItem();
@@ -501,6 +484,7 @@ public class TransactionListController {
         }
     }
 
+    //Konfirmasi hapus transaksi dan hapus data
     @FXML
     private void handleDelete() {
         Transaction selectedTransaction = transactionTable.getSelectionModel().getSelectedItem();
