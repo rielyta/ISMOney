@@ -39,3 +39,5 @@ JavaFX (Controls, FXML)
 BCrypt via org.mindrot.jbcrypt
 JDBC (Java Database Connectivity)
 Logger bawaan Java untuk debugging
+
+Link YouTube: https://youtu.be/el648X3TGiY
