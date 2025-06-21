@@ -233,7 +233,6 @@ public class DashboardController {
 
             BigDecimal totalBalance = totalIncome.subtract(totalExpense);
 
-            // Update UI fields
             totalIncomeField.setText("Rp " + String.format("%,.0f", totalIncome.doubleValue()));
             totalExpenseField.setText("Rp " + String.format("%,.0f", totalExpense.doubleValue()));
             totalBalanceField.setText("Rp " + String.format("%,.0f", totalBalance.doubleValue()));
@@ -440,20 +439,10 @@ public class DashboardController {
         }
     }
 
-    // NEW: Budget button handler
     @FXML
     private void handleBudgetButton(ActionEvent event) {
         try {
-            // Option 1: Using SceneSwitcher (recommended if you have a budget list)
             SceneSwitcher.switchTo("Budget/BudgetList.fxml", (Stage) budgetButton.getScene().getWindow());
-
-            // Option 2: Alternative using FXMLLoader (if you prefer this approach)
-            // FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/ismoney/Budget/BudgetForm.fxml"));
-            // Parent root = loader.load();
-            // Stage stage = (Stage) budgetButton.getScene().getWindow();
-            // Scene scene = new Scene(root);
-            // stage.setScene(scene);
-            // stage.show();
 
         } catch (Exception e) {
             showAlert("Kesalahan", "Terjadi kesalahan tidak terduga: " + e.getMessage());
@@ -472,14 +461,6 @@ public class DashboardController {
         SceneSwitcher.logout(currentStage, "/com/example/ismoney/Login.fxml");
     }
 
-    // Cleanup method - panggil saat scene akan ditutup
-    public void cleanup() {
-        if (autoRefreshTimeline != null) {
-            autoRefreshTimeline.stop();
-            System.out.println("Auto refresh stopped - cleanup");
-        }
-    }
-
     private void showAlert(String title, String message) {
         Platform.runLater(() -> {
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
@@ -490,7 +471,6 @@ public class DashboardController {
         });
     }
 
-    // Inner class untuk Activity Log
     public static class ActivityLog {
         private final SimpleStringProperty date;
         private final SimpleStringProperty type;
@@ -509,9 +489,6 @@ public class DashboardController {
 
         public String getType() { return type.get(); }
         public void setType(String type) { this.type.set(type); }
-
-        public String getDescription() { return description.get(); }
-        public void setDescription(String description) { this.description.set(description); }
 
         public String getAmount() { return amount.get(); }
         public void setAmount(String amount) { this.amount.set(amount); }

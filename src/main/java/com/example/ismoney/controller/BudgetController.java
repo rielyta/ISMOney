@@ -2,6 +2,7 @@ package com.example.ismoney.controller;
 
 import com.example.ismoney.model.Budget;
 import com.example.ismoney.service.BudgetService;
+import com.example.ismoney.util.SceneSwitcher;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -261,24 +262,10 @@ public class BudgetController {
 
     private void openBudgetForm(Budget budget) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/ismoney/budget/BudgetForm.fxml"));
-            Parent root = loader.load();
-
-            BudgetFormController controller = loader.getController();
-            if (budget != null) {
-                controller.setBudget(budget);
-            }
-
-            Stage stage = new Stage();
-            stage.setTitle(budget == null ? "Tambah Budget Baru" : "Edit Budget");
-            stage.setScene(new Scene(root));
-            stage.initModality(Modality.APPLICATION_MODAL);
-            stage.showAndWait();
-
-            // Refresh setelah form ditutup
+            SceneSwitcher.switchTo("Budget/BudgetForm.fxml", (Stage) addBudgetBtn.getScene().getWindow());
             loadBudgets();
 
-        } catch (IOException e) {
+        } catch (Exception e) {
             showAlert("Error", "Gagal membuka form budget: " + e.getMessage());
         }
     }
