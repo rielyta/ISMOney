@@ -19,10 +19,10 @@
                 </font>
             </Label>
             <TextField fx:id="addSavingAmountField" prefWidth="150.0" promptText="Nominal" style=" -fx-border-color: #ddd;" />
-            <Button fx:id="addSavingButton" prefHeight="30.0" style="-fx-background-color: #8c0093; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-weight: bold; -fx-cursor: hand;" text="Update" />
+            <Button fx:id="addSavingButton" prefHeight="30.0" style="-fx-background-color: #8c0093; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-weight: bold; -fx-cursor: hand;" text="Perbarui" />
             <Button fx:id="GoalFormButton" prefHeight="30.0" style="-fx-background-color: #A110A8; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-weight: bold; -fx-cursor: hand;" text="Tambah" />
-
-            <Button fx:id="refreshButton" prefHeight="30.0" style="-fx-background-color: #2196F3; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;" text="Perbarui" />
+            <Region HBox.hgrow="ALWAYS" />
+            <Button fx:id="refreshButton" prefHeight="30.0" style="-fx-background-color: #2196F3; -fx-text-fill: white; -fx-background-radius: 5;  -fx-font-weight: bold; -fx-cursor: hand;" text="Refresh" />
         </HBox>
         <HBox>
             <TextField fx:id="searchField" layoutX="637.0" layoutY="273.0" onAction="#handleFilter" prefHeight="25.0" prefWidth="710.0" promptText="Cari nama target..." />
