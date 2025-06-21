@@ -255,18 +255,18 @@ public class TransactionFormController {
             return;
         }
 
-        // 1. Validasi input dari form
+        //Validasi input dari form
         if (!validateInput()) return;
 
         try {
-            // 2. Ambil data dari form
+            //Ambil data dari form
             BigDecimal amount = new BigDecimal(amountField.getText().trim());
             String type = typeComboBox.getValue();
             Category category = categoryComboBox.getValue();
             LocalDate date = datePicker.getValue();
             String note = noteField.getText().trim();
 
-            // 3. Buat object Transaction baru
+            //Buat object Transaction baru
             Transaction newTransaction = new Transaction();
             newTransaction.setUserId(currentUserId); // Use consistent user ID
             newTransaction.setAmount(amount);
@@ -277,14 +277,19 @@ public class TransactionFormController {
 
             System.out.println("Attempting to save transaction with user ID " + currentUserId + ": " + newTransaction);
 
-            // 4. Simpan ke database via DAO
+            //Simpan ke database via DAO
             boolean success = transactionDAO.saveTransaction(newTransaction);
 
-            // 5. Tampilkan hasil
+            // Tampilkan hasil dan navigate ke TransactionList
             if (success) {
                 showSuccessAlert("Berhasil", "Transaksi berhasil disimpan!");
                 clearForm();
-                closeForm();
+
+                //Vavigate ke TransactionList setelah save berhasil
+                Stage currentStage = (Stage) amountField.getScene().getWindow();
+                SceneSwitcher.switchTo("Transaction/TransactionList.fxml", currentStage);
+                System.out.println("Successfully navigated to TransactionList after save");
+
             } else {
                 showAlert("Error", "Gagal menyimpan transaksi ke database.");
             }
