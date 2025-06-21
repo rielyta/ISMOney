@@ -53,7 +53,6 @@ public class savingGoalListController implements Initializable {
             savingGoalDAO = new SavingGoalDAO();
             savingGoalService = new SavingGoalService();
 
-            // Get current user ID using the same pattern as TransactionListController
             currentUserId = getCurrentLoggedInUserId();
             System.out.println("Using user ID for saving goals: " + currentUserId);
 
@@ -122,10 +121,9 @@ public class savingGoalListController implements Initializable {
     }
 
     private void setupSearchFunctionality() {
-        // Set the filtered list as the table's items
         goalTableView.setItems(filteredGoals);
 
-        // buat real-time search saat mengetik
+        // buat real-time search waktu mengetik
         searchField.textProperty().addListener((observable, oldValue, newValue) -> {
             filterGoals(newValue);
         });
@@ -133,7 +131,7 @@ public class savingGoalListController implements Initializable {
 
     private void filterGoals(String searchText) {
         if (searchText == null || searchText.trim().isEmpty()) {
-            // Show all goals if search text is empty
+            // kalo gaada isi search fieldnya, tampilin semuanya
             filteredGoals.setPredicate(goal -> true);
         } else {
             String lowerCaseFilter = searchText.toLowerCase().trim();
@@ -169,15 +167,14 @@ public class savingGoalListController implements Initializable {
         targetDateColumn.setCellValueFactory(new PropertyValueFactory<>("targetDate"));
         statusColumn.setCellValueFactory(new PropertyValueFactory<>("status"));
 
-        // Set alignment untuk kolom progress
         progressColumn.setStyle("-fx-alignment: CENTER;");
 
-        // Custom cell untuk progress column
+        // custom cell utk progress column
         progressColumn.setCellValueFactory(cellData -> {
             return new javafx.beans.property.SimpleStringProperty("");
         });
 
-        // Custom cell untuk status dgn warna
+        // custom cell untuk status dgn warna
         statusColumn.setCellFactory(column -> new TableCell<SavingGoal, String>() {
             @Override
             protected void updateItem(String status, boolean empty) {
@@ -227,7 +224,6 @@ public class savingGoalListController implements Initializable {
                 }
             }
         });
-
         formatCurrencyColumns();
     }
 
@@ -258,7 +254,7 @@ public class savingGoalListController implements Initializable {
         });
     }
 
-    // Helper method untuk menghitung persentase progress
+    // utk menghitung persentase progress
     private double calculateProgressPercentage(SavingGoal goal) {
         if (goal.getTargetAmount().compareTo(BigDecimal.ZERO) > 0) {
             return goal.getCurrentAmount()
@@ -272,7 +268,7 @@ public class savingGoalListController implements Initializable {
     private ProgressBar createStyledProgressBar(double progressPercentage, SavingGoal goal) {
         ProgressBar progressBar = new ProgressBar();
 
-        // Hitung persentase progress berdasarkan currentAmount dan targetAmount
+        // itung persentase progress berdasarkan currentAmount dan targetAmount
         double actualProgressPercentage = 0.0;
         if (goal.getTargetAmount().compareTo(BigDecimal.ZERO) > 0) {
             actualProgressPercentage = goal.getCurrentAmount()
@@ -320,7 +316,7 @@ public class savingGoalListController implements Initializable {
         GoalFormButton.setOnAction(event -> handleGoalFormButton());
         searchButton.setOnAction(event -> handleFilter());
 
-        // Double click untuk edit
+        //untuk edit
         goalTableView.setRowFactory(tv -> {
             TableRow<SavingGoal> row = new TableRow<>();
             row.setOnMouseClicked(event -> {
@@ -365,15 +361,14 @@ public class savingGoalListController implements Initializable {
                 SavingGoal updatedGoal = savingGoalDAO.getSavingGoalById(selectedGoal.getGoalId(), currentUserId);
 
                 if (updatedGoal != null) {
-                    // Cek apakah currentAmount sudah >= targetAmount
+                    // cek apakah currentAmount sudah >= targetAmount
                     if (updatedGoal.getCurrentAmount().compareTo(updatedGoal.getTargetAmount()) >= 0) {
-                        // Update status menjadi COMPLETED
+                        // update status menjadi COMPLETED
                         boolean statusUpdated = savingGoalDAO.updateGoalStatusBasedOnProgress(
                                 selectedGoal.getGoalId(),
                                 "COMPLETED",
                                 currentUserId
                         );
-
                         if (statusUpdated) {
                             showAlert(Alert.AlertType.INFORMATION, "Selamat!",
                                     "Target " + selectedGoal.getGoalName() + " telah tercapai! 🎉\n" +
@@ -397,16 +392,15 @@ public class savingGoalListController implements Initializable {
         }
     }
 
+    //double check kalo ada yg uda 100% tapi belum ke update
     private void checkAndUpdateGoalStatuses() {
         try {
             List<SavingGoal> goals = savingGoalDAO.getSavingGoalsByUserId(currentUserId);
 
             for (SavingGoal goal : goals) {
-                // Cek apakah goal sudah completed tapi statusnya belum COMPLETED
                 if (goal.getCurrentAmount().compareTo(goal.getTargetAmount()) >= 0
                         && !"COMPLETED".equals(goal.getStatus())) {
 
-                    // Update status menjadi COMPLETED
                     boolean statusUpdated = savingGoalDAO.updateGoalStatusBasedOnProgress(
                             goal.getGoalId(),
                             "COMPLETED",
@@ -464,7 +458,6 @@ public class savingGoalListController implements Initializable {
                 }
             }
 
-            // Reset search filter after loading new data
             String currentSearchText = searchField.getText();
             if (currentSearchText != null && !currentSearchText.trim().isEmpty()) {
                 filterGoals(currentSearchText);
